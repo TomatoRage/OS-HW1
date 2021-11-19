@@ -4,7 +4,7 @@
 #include "../../Desktop/skeleton_smash/Commands.h"
 
 using namespace std;
-
+//Ana sholt
 void ctrlZHandler(int sig_num) {
 	// TODO: Add your implementation
 }
