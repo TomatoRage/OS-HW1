@@ -2,18 +2,36 @@
 #define SMASH_COMMAND_H_
 
 #include <vector>
+#include "iostream"
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
+#define WHITESPACE ""
+
+using namespace std;
+
+enum CommandType{
+    FGEXTERNAL,
+    BGEXTERNAL,
+    BUILTIN,
+    SPECIAL,
+    PIPE,
+    REDIRECTION,
+};
 
 class Command {
-// TODO: Add your data members
  public:
-  Command(const char* cmd_line);
-  virtual ~Command();
-  virtual void execute() = 0;
-  //virtual void prepare();
-  //virtual void cleanup();
+
+    string cmdSyntax;
+    vector<string> Arguments;
+    CommandType Type;
+
+    Command(const char* cmd_line,CommandType type);
+    virtual ~Command();
+    virtual void execute() = 0;
+    static vector<string> FillInArguments(const string& cmdline);
+    //virtual void prepare();
+    //virtual void cleanup();
   // TODO: Add your extra methods if needed
 };
 

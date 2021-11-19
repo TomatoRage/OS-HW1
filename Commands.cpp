@@ -5,7 +5,7 @@
 #include <sstream>
 #include <sys/wait.h>
 #include <iomanip>
-#include "../../Desktop/skeleton_smash/Commands.h"
+#include "Commands.h"
 
 using namespace std;
 
@@ -75,7 +75,28 @@ void _removeBackgroundSign(char* cmd_line) {
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-// TODO: Add your implementation for classes in Commands.h 
+Command::Command(const char *cmd_line,CommandType type) {
+    string cmd = _trim(string(cmd_line));
+    cmdSyntax = cmd;
+    this->Type = type;
+    Arguments = FillInArguments(cmd);
+}
+
+Command::~Command() noexcept = default;
+
+vector<string> Command::FillInArguments(const string& cmdline) {
+    vector<string> Vicky;
+    char **Args = [];
+    int size = _parseCommandLine(cmdline.c_str(),Args);
+    for(int i = 0; i < size; i++){
+        Vicky.emplace_back(Args[i]);
+    }
+    return Vicky;
+}
+
+BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) {
+
+}
 
 SmallShell::SmallShell() {
 // TODO: add your implementation

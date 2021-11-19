@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "../../Desktop/skeleton_smash/Commands.h"
-#include "../../Desktop/skeleton_smash/signals.h"
+#include "Commands.h"
+#include "signals.h"
 
 int main(int argc, char* argv[]) {
     if(signal(SIGTSTP , ctrlZHandler)==SIG_ERR) {
@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 
     SmallShell& smash = SmallShell::getInstance();
     while(true) {
+
         std::cout << "smash> ";
         std::string cmd_line;
         std::getline(std::cin, cmd_line);

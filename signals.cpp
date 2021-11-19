@@ -1,7 +1,7 @@
 #include <iostream>
 #include <signal.h>
 #include "signals.h"
-#include "../../Desktop/skeleton_smash/Commands.h"
+#include "Commands.h"
 
 using namespace std;
 
