@@ -98,6 +98,25 @@ BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) 
 
 }
 
+ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTERNAL){
+
+    if(_isBackgroundComamnd(cmd_line)){
+        Type = BGEXTERNAL;
+        int size = Arguments.size();
+        if(Arguments[size-1] == "&"){
+            Arguments.pop_back();
+        }
+    }
+
+}
+
+void ExternalCommand::execute() {
+    if(Type == FGEXTERNAL){
+
+    }else{
+
+    }
+}
 SmallShell::SmallShell() {
 // TODO: add your implementation
 }
