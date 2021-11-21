@@ -8,11 +8,11 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "C:/Users/Ahmad/CLionProjects/HW-OS1/Commands.cpp" "C:/Users/Ahmad/CLionProjects/HW-OS1/cmake-build-debug/CMakeFiles/HW_OS1.dir/Commands.cpp.obj"
-  "C:/Users/Ahmad/CLionProjects/HW-OS1/signals.cpp" "C:/Users/Ahmad/CLionProjects/HW-OS1/cmake-build-debug/CMakeFiles/HW_OS1.dir/signals.cpp.obj"
-  "C:/Users/Ahmad/CLionProjects/HW-OS1/smash.cpp" "C:/Users/Ahmad/CLionProjects/HW-OS1/cmake-build-debug/CMakeFiles/HW_OS1.dir/smash.cpp.obj"
+  "/Users/ahmadghanayem/CLionProjects/OS-HW1/Commands.cpp" "/Users/ahmadghanayem/CLionProjects/OS-HW1/cmake-build-debug/CMakeFiles/HW_OS1.dir/Commands.cpp.o"
+  "/Users/ahmadghanayem/CLionProjects/OS-HW1/signals.cpp" "/Users/ahmadghanayem/CLionProjects/OS-HW1/cmake-build-debug/CMakeFiles/HW_OS1.dir/signals.cpp.o"
+  "/Users/ahmadghanayem/CLionProjects/OS-HW1/smash.cpp" "/Users/ahmadghanayem/CLionProjects/OS-HW1/cmake-build-debug/CMakeFiles/HW_OS1.dir/smash.cpp.o"
   )
-set(CMAKE_CXX_COMPILER_ID "GNU")
+set(CMAKE_CXX_COMPILER_ID "AppleClang")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH

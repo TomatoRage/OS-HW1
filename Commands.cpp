@@ -82,11 +82,9 @@ Command::Command(const char *cmd_line,CommandType type) {
     Arguments = FillInArguments(cmd);
 }
 
-Command::~Command() noexcept = default;
-
 vector<string> Command::FillInArguments(const string& cmdline) {
     vector<string> Vicky;
-    char **Args = [];
+    char **Args;
     int size = _parseCommandLine(cmdline.c_str(),Args);
     for(int i = 0; i < size; i++){
         Vicky.emplace_back(Args[i]);
@@ -95,7 +93,7 @@ vector<string> Command::FillInArguments(const string& cmdline) {
 }
 
 BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) {
-
+// TODO: Fill this
 }
 
 ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTERNAL){
@@ -111,10 +109,28 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
 }
 
 void ExternalCommand::execute() {
+    pid_t son = fork();
+    if(son == -1)
+        perror("smash error: fork failed");
     if(Type == FGEXTERNAL){
+        if(son == 0){
+            setpgrp();
+            char *Args[] = {"-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
+            if(execv("/bin/bash",Args) == -1)
+                perror("smash error: exec failed");
+        }else{
+            int status,wstatus;
 
+            waitpid(son,&wstatus,0);
+            status = WEXITSTATUS(wstatus);
+        }
     }else{
-
+        if(son == 0){
+            setpgrp();
+            char *Args[] = {"-c", const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str()), NULL};
+            if(execv("/bin/bash",Args) == -1)
+                perror("smash error: exec failed");
+        }
     }
 }
 SmallShell::SmallShell() {
