@@ -92,9 +92,7 @@ vector<string> Command::FillInArguments(const string& cmdline) {
     return Vicky;
 }
 
-BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) {
-// TODO: Fill this
-}
+BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) { }
 
 ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTERNAL){
 
