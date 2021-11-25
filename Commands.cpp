@@ -131,6 +131,99 @@ void ExternalCommand::execute() {
         }
     }
 }
+
+ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line),lastdir(plastPwd) {}
+
+void ChangeDirCommand::execute() {
+    int result;
+    if(Arguments.size() > 2) {
+        cerr << "smash error: cd: too many arguments" << endl;
+        return;
+    }else if(Arguments[1] == "-" && lastdir == nullptr){
+        cerr << "smash error: cd: OLDPWD not set" << endl;
+        return;
+    }
+    if(Arguments[2] == "-"){
+        result = chdir(*lastdir);
+    }else{
+        result = chdir(Arguments[2].c_str());
+    }
+    if(result == -1)
+        perror("smash error: chdir failed");
+}
+
+GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
+
+void GetCurrDirCommand::execute() {
+    char* Dir;
+    getwd(Dir);
+
+    if (Dir == nullptr){
+        perror("smash error: getcwd failed");
+        return;
+    }
+    cout << Dir << endl;
+}
+
+ShowPidCommand::ShowPidCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
+
+void ShowPidCommand::execute() {
+    pid_t currPid = getpid();
+
+    cout << "smash pid is " << currPid << endl;
+}
+
+QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs) {}
+
+void QuitCommand::execute() {
+    if(Arguments[1] == "kill"){
+        cout << "sending SIGKILL signal to " << jobs->Total << " jobs:" << endl;
+        jobs->printJobswithpid();
+        jobs->killAllJobs();
+    }
+    exit(0);
+}
+
+JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
+
+void JobsCommand::execute() {
+    Jobs->printJobsList();
+}
+
+KillCommand::KillCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
+
+void KillCommand::execute() {
+    int sig,job;
+    if(Arguments.size() != 3){
+        cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
+    try{
+        sig = stoi(Arguments[1]);
+        job = stoi(Arguments[2]);
+    }catch(...){
+        cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
+    if(Jobs->getJobById(job) == nullptr){
+        cerr << "smash error: kill: job-id " << job << " does not exist" << endl;
+        return;
+    }
+
+    pid_t son = fork();
+    pid_t ToKill = Jobs->getJobById(job)->jobPID;
+    if(son == 0){
+        char* Args[] = {"-c", "kill -s", const_cast<char *>(to_string(sig).c_str()),const_cast<char *>(to_string(ToKill).c_str())};
+        setpgrp();
+        execv("/bin/bash",Args);
+    }else{
+        waitpid(son, nullptr,0);
+        cout << "signal number " << sig << " was sent to pid " << ToKill << endl;
+    }
+    //TODO:CHECK IF GOOD IMPLEMENTATION
+}
+
+
 SmallShell::SmallShell() {
 // TODO: add your implementation
 }

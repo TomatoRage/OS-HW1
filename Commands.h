@@ -32,7 +32,6 @@ class Command {
         static vector<string> FillInArguments(const string& cmdline);
         //virtual void prepare();
         //virtual void cleanup();
-      // TODO: Add your extra methods if needed
 };
 
 class BuiltInCommand : public Command {
@@ -67,7 +66,7 @@ class RedirectionCommand : public Command {
 };
 
 class ChangeDirCommand : public BuiltInCommand {
-// TODO: Add your data members public:
+    char **lastdir;
     ChangeDirCommand(const char* cmd_line, char** plastPwd);
     virtual ~ChangeDirCommand() {}
     void execute() override;
@@ -89,7 +88,7 @@ class ShowPidCommand : public BuiltInCommand {
 
 class JobsList;
 class QuitCommand : public BuiltInCommand {
-// TODO: Add your data members public:
+    JobsList* jobs;
     QuitCommand(const char* cmd_line, JobsList* jobs);
     virtual ~QuitCommand() {}
     void execute() override;
@@ -101,14 +100,20 @@ class QuitCommand : public BuiltInCommand {
 class JobsList {
     public:
         class JobEntry {
-        // TODO: Add your data members
+            public:
+            pid_t jobPID;
+            int jobID;
+            //TODO: add memebers fields
         };
-        // TODO: Add your data members
+        int Total;
+        int MaxJob;
+        vector<JobEntry> Jobs;
     public:
         JobsList();
         ~JobsList();
         void addJob(Command* cmd, bool isStopped = false);
         void printJobsList();
+        void printJobswithpid();
         void killAllJobs();
         void removeFinishedJobs();
         JobEntry * getJobById(int jobId);
@@ -119,7 +124,7 @@ class JobsList {
 };
 
 class JobsCommand : public BuiltInCommand {
-    // TODO: Add your data members
+    JobsList* Jobs;
     public:
         JobsCommand(const char* cmd_line, JobsList* jobs);
         virtual ~JobsCommand() {}
@@ -127,7 +132,7 @@ class JobsCommand : public BuiltInCommand {
 };
 
 class KillCommand : public BuiltInCommand {
-    // TODO: Add your data members
+    JobsList* Jobs;
     public:
         KillCommand(const char* cmd_line, JobsList* jobs);
         virtual ~KillCommand() {}
@@ -140,6 +145,7 @@ class ForegroundCommand : public BuiltInCommand {
         ForegroundCommand(const char* cmd_line, JobsList* jobs);
         virtual ~ForegroundCommand() {}
         void execute() override;
+    //TODO:Implement This
 };
 
 class BackgroundCommand : public BuiltInCommand {
@@ -148,6 +154,7 @@ class BackgroundCommand : public BuiltInCommand {
         BackgroundCommand(const char* cmd_line, JobsList* jobs);
         virtual ~BackgroundCommand() {}
         void execute() override;
+    //TODO:Implement This
 };
 
 class HeadCommand : public BuiltInCommand {
@@ -155,12 +162,12 @@ class HeadCommand : public BuiltInCommand {
         HeadCommand(const char* cmd_line);
         virtual ~HeadCommand() {}
         void execute() override;
+        //TODO:Implement This
 };
 
 
 class SmallShell {
     private:
-        string SmashPrompt;
         SmallShell();
     public:
         Command *CreateCommand(const char* cmd_line);
