@@ -2,6 +2,7 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
+#include <signal.h>
 #include <sstream>
 #include <sys/wait.h>
 #include <iomanip>
@@ -98,10 +99,6 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
 
     if(_isBackgroundComamnd(cmd_line)){
         Type = BGEXTERNAL;
-        int size = Arguments.size();
-        if(Arguments[size-1] == "&"){
-            Arguments.pop_back();
-        }
     }
 
 }
@@ -209,20 +206,79 @@ void KillCommand::execute() {
         cerr << "smash error: kill: job-id " << job << " does not exist" << endl;
         return;
     }
+    int result = kill(Jobs->getJobById(job)->jobPID,sig);
 
-    pid_t son = fork();
-    pid_t ToKill = Jobs->getJobById(job)->jobPID;
-    if(son == 0){
-        char* Args[] = {"-c", "kill -s", const_cast<char *>(to_string(sig).c_str()),const_cast<char *>(to_string(ToKill).c_str())};
-        setpgrp();
-        execv("/bin/bash",Args);
-    }else{
-        waitpid(son, nullptr,0);
-        cout << "signal number " << sig << " was sent to pid " << ToKill << endl;
+    if (result == -1){
+        perror("smash error: kill failed");
+        return;
     }
-    //TODO:CHECK IF GOOD IMPLEMENTATION
+    cout << "signal number " << sig << " was sent to pid " << Jobs->getJobById(job)->jobPID << endl;
 }
 
+ForegroundCommand::ForegroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
+
+void ForegroundCommand::execute() {
+    int jobid = -1;
+    if(Arguments.size() > 2){
+        cerr << "smash error: fg: invalid arguments" << endl;
+        return;
+    }
+    try{
+        if(Arguments.size() == 2)
+            jobid = stoi(Arguments[1]);
+    }catch(...){
+        cerr << "smash error: fg: invalid arguments" << endl;
+        return;
+    }
+    if(Jobs->Jobs.empty()){
+        cerr << "smash error: fg: job list is empty" << endl;
+        return;
+    }else if(jobid != -1 && Jobs->getJobById(jobid) == nullptr){
+        cerr << "smash error: fg: job-id " << jobid << " does not exist" << endl;
+        return;
+    }
+    if(jobid == -1)
+        jobid = Jobs->getMaxJobId()->jobID;
+    if(kill(Jobs->getJobById(jobid)->jobPID,SIGCONT) == -1){
+        perror("smash error: kill failed");
+        return;
+    }
+    cout << Arguments[0] << " :" << Jobs->getJobById(jobid)->jobPID << endl;
+    Jobs->removeJobById(jobid);
+    waitpid(Jobs->getJobById(jobid)->jobPID, nullptr,0);
+}
+
+BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
+
+void BackgroundCommand::execute() {
+    int jobid = -1;
+    if(Arguments.size() > 2){
+        cerr << "smash error: bg: invalid arguments" << endl;
+        return;
+    }
+    try{
+        if(Arguments.size() == 2)
+            jobid = stoi(Arguments[1]);
+    }catch(...){
+        cerr << "smash error: bg: invalid arguments" << endl;
+        return;
+    }if(jobid == -1 && Jobs->getLastStoppedJob(&jobid) == nullptr){
+        cerr << "smash error: bg: there is no stopped jobs to resume" << endl;
+        return;
+    }if(jobid != -1 && Jobs->getJobById(jobid)->state == JobsList::JobEntry::RUNNING){
+        cerr << "smash error: bg: job-id " << jobid << " is already running in the background" << endl;
+        return;
+    }if(jobid != -1 && Jobs->getJobById(jobid) == nullptr){
+        cerr << "smash error: bg: job-id " << jobid << " does not exist" << endl;
+        return;
+    }
+    if(kill(Jobs->getJobById(jobid)->jobPID,SIGCONT) == -1){
+        perror("smash error: kill failed");
+        return;
+    }
+    Jobs->getJobById(jobid)->state = JobsList::JobEntry::RUNNING;
+    cout << Arguments[0] << " : " << Jobs->getJobById(jobid)->jobPID << endl;
+}
 
 SmallShell::SmallShell() {
 // TODO: add your implementation

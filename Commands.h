@@ -101,8 +101,14 @@ class JobsList {
     public:
         class JobEntry {
             public:
+            enum STATUS{
+                STOPPED,
+                RUNNING,
+                FINISHED
+            };
             pid_t jobPID;
             int jobID;
+            STATUS state;
             //TODO: add memebers fields
         };
         int Total;
@@ -120,6 +126,7 @@ class JobsList {
         void removeJobById(int jobId);
         JobEntry * getLastJob(int* lastJobId);
         JobEntry *getLastStoppedJob(int *jobId);
+        JobEntry *getMaxJobId();
         // TODO: Add extra methods or modify exisitng ones as needed
 };
 
@@ -140,21 +147,19 @@ class KillCommand : public BuiltInCommand {
 };
 
 class ForegroundCommand : public BuiltInCommand {
-    // TODO: Add your data members
+    JobsList* Jobs;
     public:
         ForegroundCommand(const char* cmd_line, JobsList* jobs);
         virtual ~ForegroundCommand() {}
         void execute() override;
-    //TODO:Implement This
 };
 
 class BackgroundCommand : public BuiltInCommand {
-    // TODO: Add your data members
+    JobsList* Jobs;
     public:
         BackgroundCommand(const char* cmd_line, JobsList* jobs);
         virtual ~BackgroundCommand() {}
         void execute() override;
-    //TODO:Implement This
 };
 
 class HeadCommand : public BuiltInCommand {
