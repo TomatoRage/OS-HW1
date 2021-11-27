@@ -175,6 +175,11 @@ class SmallShell {
 private:
     SmallShell();
 public:
+    Command* currCommand;
+    char* oldDirName;
+    char* smashName;
+    JobsList* jobList;
+    pid_t smashPID;
     Command *CreateCommand(const char* cmd_line);
     SmallShell(SmallShell const&)      = delete; // disable copy ctor
     void operator=(SmallShell const&)  = delete; // disable = operator
