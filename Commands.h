@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "iostream"
+#include <time.h>
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
@@ -25,6 +26,7 @@ public:
     string cmdSyntax;
     vector<string> Arguments;
     CommandType Type;
+    pid_t proccessPID;
 
     Command(const char* cmd_line,CommandType type);
     virtual ~Command();
@@ -115,14 +117,14 @@ public:
             RUNNING,
             FINISHED
         };
-        pid_t jobPID;
+        Command* cmd;
         int jobID;
         STATUS state;
-        //TODO: add memebers fields
+        time_t StartTime;
     };
     int Total;
     int MaxJob;
-    vector<JobEntry> Jobs;
+    vector<JobEntry*> Jobs;
 public:
     JobsList();
     ~JobsList();
