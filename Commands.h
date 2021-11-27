@@ -26,7 +26,7 @@ public:
     string cmdSyntax;
     vector<string> Arguments;
     CommandType Type;
-    pid_t proccessPID;
+    pid_t processPID;
 
     Command(const char* cmd_line,CommandType type);
     virtual ~Command();
@@ -68,6 +68,7 @@ public:
 };
 
 class ChangeDirCommand : public BuiltInCommand {
+public:
     char **lastdir;
     ChangeDirCommand(const char* cmd_line, char** plastPwd);
     virtual ~ChangeDirCommand() {}
@@ -138,6 +139,7 @@ public:
     JobEntry * getLastJob(int* lastJobId);
     JobEntry *getLastStoppedJob(int *jobId);
     JobEntry *getMaxJobId();
+    JobEntry *getJobByPID(pid_t pid);
     // TODO: Add extra methods or modify exisitng ones as needed
 };
 

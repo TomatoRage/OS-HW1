@@ -82,7 +82,7 @@ Command::Command(const char *cmd_line,CommandType type) {
     cmdSyntax = cmd;
     this->Type = type;
     Arguments = FillInArguments(cmd);
-    this->proccessPID = -1;
+    this->processPID = -1;
 }
 
 vector<string> Command::FillInArguments(const string& cmdline) {
@@ -129,7 +129,7 @@ void ExternalCommand::execute() {
             if(execv("/bin/bash",Args) == -1)
                 perror("smash error: exec failed");
         }else
-            proccessPID = son;
+            processPID = son;
     }
 }
 
@@ -213,7 +213,7 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
 
 void JobsList::printJobsList() {
     for(int i = 0; i < Jobs.size(); i++){
-        cout << "[" << Jobs[i]->jobID << "] " << Jobs[i]->cmd->cmdSyntax << " : " << Jobs[i]->cmd->proccessPID << " "
+        cout << "[" << Jobs[i]->jobID << "] " << Jobs[i]->cmd->cmdSyntax << " : " << Jobs[i]->cmd->processPID << " "
         << (int) difftime(Jobs[i]->StartTime,time(nullptr)) << " secs" << endl;
     }
 }
@@ -249,13 +249,13 @@ void KillCommand::execute() {
         cerr << "smash error: kill: job-id " << job << " does not exist" << endl;
         return;
     }
-    int result = kill(Jobs->getJobById(job)->cmd->proccessPID,sig);
+    int result = kill(Jobs->getJobById(job)->cmd->processPID,sig);
 
     if (result == -1){
         perror("smash error: kill failed");
         return;
     }
-    cout << "signal number " << sig << " was sent to pid " << Jobs->getJobById(job)->cmd->proccessPID << endl;
+    cout << "signal number " << sig << " was sent to pid " << Jobs->getJobById(job)->cmd->processPID << endl;
 }
 
 ForegroundCommand::ForegroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
@@ -282,13 +282,13 @@ void ForegroundCommand::execute() {
     }
     if(jobid == -1)
         jobid = Jobs->getMaxJobId()->jobID;
-    if(kill(Jobs->getJobById(jobid)->cmd->proccessPID,SIGCONT) == -1){
+    if(kill(Jobs->getJobById(jobid)->cmd->processPID,SIGCONT) == -1){
         perror("smash error: kill failed");
         return;
     }
-    cout << cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->proccessPID << endl;
+    cout << cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     Jobs->removeJobById(jobid);
-    waitpid(Jobs->getJobById(jobid)->cmd->proccessPID, nullptr,0);
+    waitpid(Jobs->getJobById(jobid)->cmd->processPID, nullptr,0);
 }
 
 BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
@@ -315,12 +315,12 @@ void BackgroundCommand::execute() {
         cerr << "smash error: bg: job-id " << jobid << " does not exist" << endl;
         return;
     }
-    if(kill(Jobs->getJobById(jobid)->cmd->proccessPID,SIGCONT) == -1){
+    if(kill(Jobs->getJobById(jobid)->cmd->processPID,SIGCONT) == -1){
         perror("smash error: kill failed");
         return;
     }
     Jobs->getJobById(jobid)->state = JobsList::JobEntry::RUNNING;
-    cout << cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->proccessPID << endl;
+    cout << cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->processPID << endl;
 }
 
 SmallShell::SmallShell() {
