@@ -13,7 +13,7 @@ void ctrlZHandler(int sig_num) {
     int proID = SmallShell::getInstance().currCommand->processPID;
     if (SmallShell::getInstance().currCommand->Type == PIPE ||
         SmallShell::getInstance().currCommand->Type == REDIRECTION ||
-        SmallShell::getInstance().currCommand->Type == PIPE) {//time out
+        SmallShell::getInstance().currCommand->Type == PIPE) {//time o
         if (killpg(proID, SIGSTOP) == -1) {
             perror("smash error: kill failed");
             return;
