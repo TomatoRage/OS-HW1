@@ -6,7 +6,7 @@
 using namespace std;
 
 void ctrlZHandler(int sig_num) {
-    //SmallShell::getInstance().currCommand->isFinished = true;
+
     // TODO: Add your implementation
     cout << "smash: got ctrl-Z" << endl;
     if (SmallShell::getInstance().currCommand == NULL) return;
@@ -23,15 +23,9 @@ void ctrlZHandler(int sig_num) {
         return;
     }
     cout << "smash: process " << proID << " was stopped" << endl;
-
-    if () {
-
-
-    } else {
-
-    }
-
-
+    //SmallShell::getInstance().currCommand->isFinished = true;
+        SmallShell::getInstance().jobList->addJob(SmallShell::getInstance().currCommand, true);
+        SmallShell::getInstance().currCommand = NULL;
 }
 
 void ctrlCHandler(int sig_num) {
