@@ -86,8 +86,17 @@ public:
     void execute() override;
 };
 
+class chpromptCommand : public BuiltInCommand {
+public:
+    chpromptCommand(const char *cmd_line);
+    virtual ~chpromptCommand();
+    void execute() override;
+};
+
+
 class JobsList;
 class QuitCommand : public BuiltInCommand {
+public:
     JobsList* jobs;
     QuitCommand(const char* cmd_line, JobsList* jobs);
     virtual ~QuitCommand() {}
@@ -192,6 +201,7 @@ public:
     ~SmallShell();
     void executeCommand(const char* cmd_line);
     // TODO: add extra methods as needed
+
 };
 
 #endif //SMASH_COMMAND_H_

@@ -293,7 +293,25 @@ SmallShell::SmallShell() {
 
 SmallShell::~SmallShell() {
 // TODO: add your implementation
+    if (oldDirName != NULL) {
+        delete oldDirName;
+    }
+    oldDirName = NULL;//
+    delete smashName;
+    smashName = NULL;
+    delete jobList;
 }
+
+void FreeArgs(int N,char **args) {
+    for (int i = 0; i < N; i++) {
+        free(args[i]);
+        args[i] = NULL;
+    }
+    delete[] args;
+    args = NULL;
+}
+
+
 
 /**
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
@@ -312,13 +330,13 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     if (strchr(cmd_line, '|')) {
         cmd->Type=PIPE;
         currCommand = cmd;
-        freeArguments(Args, NumOfArgs);
+        FreeArgs(NumOfArgs,Args );
         return cmd;
     }
     if (strchr(cmd_line, '>')) {
         cmd->Type=REDIRECTION;
         currCommand = cmd;
-        freeArguments(Args, NumOfArgs);
+        FreeArgs(NumOfArgs, Args);
         return cmd;
     }
     char *tmpCmd = new char[strlen(cmd_line) + 1];
@@ -333,98 +351,99 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 
         cmd = new chpromptCommand(tmpCmd);
         currCommand = cmd;
-        freeArguments(Args, NumOfArgs);
-        freeArguments(newArgs, NewnumOfArgs);
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs, Args);
         delete[] tmpCmd;
         return cmd;
     }
     else if(strcmp(newArgs[0], "head\0")==0){
         cmd= new HeadCommand(tmpCmd);
         currCommand=cmd;
-        freeArguments(Args, NumOfArgs);
-        freeArguments(newArgs, NewnumOfArgs);
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
         delete[] tmpCmd;
         return cmd;
     }
     if (strcmp(newArgs[0], "pwd\0") == 0) {
         cmd = new GetCurrDirCommand(tmpCmd);
         currCommand = cmd;
-        freeArguments(Args, NumOfArgs);
-        freeArguments(newArgs, NewnumOfArgs);
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
         delete[] tmpCmd;
         return cmd;
     }
 
-    if (strcmp(new_args[0], "cd\0") == 0) {
-        command = new ChangeDirCommand(NewCMD, &oldDir);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "cd\0") == 0) {
+        cmd = new ChangeDirCommand(tmpCmd, &oldDir);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
 
-    if (strcmp(new_args[0], "kill\0") == 0) {
-        command = new KillCommand(NewCMD, jobList);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "kill\0") == 0) {
+        cmd = new KillCommand(tmpCmd, jobList);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
 
-    if (strcmp(new_args[0], "jobs\0") == 0) {
-        command = new JobsCommand(NewCMD, jobList);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "jobs\0") == 0) {
+        cmd = new JobsCommand(tmpCmd, jobList);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
 
 
-    if (strcmp(new_args[0], "fg\0") == 0) {
-        command = new ForegroundCommand(NewCMD, jobList);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "fg\0") == 0) {
+        cmd = new ForegroundCommand(tmpCmd, jobList);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
 
-    if (strcmp(new_args[0], "showpid\0") == 0) {
-        command = new ShowPidCommand(NewCMD);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "showpid\0") == 0) {
+        cmd = new ShowPidCommand(tmpCmd);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+
+        delete[] tmpCmd;
+        return cmd;
     }
 
-    if (strcmp(new_args[0], "bg\0") == 0) {
-        command = new BackgroundCommand(NewCMD, jobList);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "bg\0") == 0) {
+        cmd = new BackgroundCommand(tmpCmd, jobList);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
-    if (strcmp(new_args[0], "quit\0") == 0) {
-        command = new QuitCommand(NewCMD, jobList);
-        currentCommand = command;
-        freeArguments(argums, NumOfArgs);
-        freeArguments(new_args, NewnumOfArgs);
-        delete[] NewCMD;
-        return command;
+    if (strcmp(newArgs[0], "quit\0") == 0) {
+        cmd = new QuitCommand(tmpCmd, jobList);
+        currCommand = cmd;
+        FreeArgs(NewnumOfArgs,newArgs );
+        FreeArgs(NumOfArgs,Args );
+        delete[] tmpCmd;
+        return cmd;
     }
 
-    command = new ExternalCommand(cmd_line);
-    currentCommand = command;
-    freeArguments(argums, NumOfArgs);
-    freeArguments(new_args, NewnumOfArgs);
-    delete[] NewCMD;
-    return command;
-  return nullptr;
+    cmd = new ExternalCommand(cmd_line);
+    currCommand = cmd;
+    FreeArgs(NewnumOfArgs,newArgs );
+    FreeArgs(NumOfArgs,Args );
+    delete[] tmpCmd;
+    return cmd;
+
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
@@ -432,5 +451,13 @@ void SmallShell::executeCommand(const char *cmd_line) {
   // for example:
   // Command* cmd = CreateCommand(cmd_line);
   // cmd->execute();
+    currCommand = CreateCommand(cmd_line);
+    if (currCommand) {
+        jobList->removeFinishedJobs();
+        if (currCommand->Type == BGEXTERNAL) {
+            jobList->addJob(currCommand);
+        }
+        currCommand->execute();
+    }
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
