@@ -282,6 +282,13 @@ void BackgroundCommand::execute() {
 
 SmallShell::SmallShell() {
 // TODO: add your implementation
+    currCommand = NULL;
+    oldDirName = NULL;
+    smashName = new char[6];
+    jobList = new JobsList;
+    strcpy(smashName, "smash");
+    smashPID = getpid();
+
 }
 
 SmallShell::~SmallShell() {
@@ -292,23 +299,131 @@ SmallShell::~SmallShell() {
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
 */
 Command * SmallShell::CreateCommand(const char* cmd_line) {
-	// For example:
-/*
-  string cmd_s = _trim(string(cmd_line));
-  string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
 
-  if (firstWord.compare("pwd") == 0) {
-    return new GetCurrDirCommand(cmd_line);
-  }
-  else if (firstWord.compare("showpid") == 0) {
-    return new ShowPidCommand(cmd_line);
-  }
-  else if ...
-  .....
-  else {
-    return new ExternalCommand(cmd_line);
-  }
-  */
+    char **Args = new char *[22];
+    Command *cmd;
+    for (int i = 0; i < 22; i++) {
+        Args[i] = NULL;
+    }
+    int NumOfArgs = _parseCommandLine(cmd_line, Args);
+    cmd = new PipeCommand(cmd_line);
+    if (NumOfArgs == 0)
+        return NULL;
+    if (strchr(cmd_line, '|')) {
+        cmd->Type=PIPE;
+        currCommand = cmd;
+        freeArguments(Args, NumOfArgs);
+        return cmd;
+    }
+    if (strchr(cmd_line, '>')) {
+        cmd->Type=REDIRECTION;
+        currCommand = cmd;
+        freeArguments(Args, NumOfArgs);
+        return cmd;
+    }
+    char *tmpCmd = new char[strlen(cmd_line) + 1];
+    strcpy(tmpCmd, cmd_line);
+    _removeBackgroundSign(tmpCmd);
+    char **newArgs = new char *[22];
+    for (int i = 0; i < 22; i++) {
+        newArgs[i] = NULL;
+    }
+    int NewnumOfArgs = _parseCommandLine(tmpCmd, newArgs);
+    if (strcmp(newArgs[0], "chprompt\0") == 0) {
+
+        cmd = new chpromptCommand(tmpCmd);
+        currCommand = cmd;
+        freeArguments(Args, NumOfArgs);
+        freeArguments(newArgs, NewnumOfArgs);
+        delete[] tmpCmd;
+        return cmd;
+    }
+    else if(strcmp(newArgs[0], "head\0")==0){
+        cmd= new HeadCommand(tmpCmd);
+        currCommand=cmd;
+        freeArguments(Args, NumOfArgs);
+        freeArguments(newArgs, NewnumOfArgs);
+        delete[] tmpCmd;
+        return cmd;
+    }
+    if (strcmp(newArgs[0], "pwd\0") == 0) {
+        cmd = new GetCurrDirCommand(tmpCmd);
+        currCommand = cmd;
+        freeArguments(Args, NumOfArgs);
+        freeArguments(newArgs, NewnumOfArgs);
+        delete[] tmpCmd;
+        return cmd;
+    }
+
+    if (strcmp(new_args[0], "cd\0") == 0) {
+        command = new ChangeDirCommand(NewCMD, &oldDir);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+    if (strcmp(new_args[0], "kill\0") == 0) {
+        command = new KillCommand(NewCMD, jobList);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+    if (strcmp(new_args[0], "jobs\0") == 0) {
+        command = new JobsCommand(NewCMD, jobList);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+
+    if (strcmp(new_args[0], "fg\0") == 0) {
+        command = new ForegroundCommand(NewCMD, jobList);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+    if (strcmp(new_args[0], "showpid\0") == 0) {
+        command = new ShowPidCommand(NewCMD);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+    if (strcmp(new_args[0], "bg\0") == 0) {
+        command = new BackgroundCommand(NewCMD, jobList);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+    if (strcmp(new_args[0], "quit\0") == 0) {
+        command = new QuitCommand(NewCMD, jobList);
+        currentCommand = command;
+        freeArguments(argums, NumOfArgs);
+        freeArguments(new_args, NewnumOfArgs);
+        delete[] NewCMD;
+        return command;
+    }
+
+    command = new ExternalCommand(cmd_line);
+    currentCommand = command;
+    freeArguments(argums, NumOfArgs);
+    freeArguments(new_args, NewnumOfArgs);
+    delete[] NewCMD;
+    return command;
   return nullptr;
 }
 
