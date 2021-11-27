@@ -212,6 +212,7 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
 }
 
 void JobsList::printJobsList() {
+    removeFinishedJobs();
     for(int i = 0; i < Jobs.size(); i++){
         cout << "[" << Jobs[i]->jobID << "] " << Jobs[i]->cmd->cmdSyntax << " : " << Jobs[i]->cmd->proccessPID << " "
         << (int) difftime(Jobs[i]->StartTime,time(nullptr)) << " secs" << endl;
@@ -220,7 +221,26 @@ void JobsList::printJobsList() {
 
 void JobsList::printJobswithpid() {
     for(int i = 0; i < Jobs.size(); i++){
-        
+        cout << Jobs[i]->cmd->proccessPID << ": " << Jobs[i]->cmd->cmdSyntax << endl;
+    }
+}
+
+void JobsList::killAllJobs() {
+    for(int i = 0; i < Jobs.size(); i++){
+        if (kill(Jobs[i]->cmd->proccessPID,SIGKILL) == -1){
+            perror("smash error: kill failed");
+            return;
+        }
+    }
+}
+
+void JobsList::removeFinishedJobs() {
+    for(int i = 0; i < Jobs.size();i++) {
+        int son = waitpid(Jobs[i]->cmd->proccessPID, nullptr, WNOHANG);
+        if(son != 0){
+            
+           // Jobs.erase(std::next(Jobs.begin(), 1))
+        }
     }
 }
 

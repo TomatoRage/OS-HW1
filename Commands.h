@@ -68,6 +68,7 @@ public:
 };
 
 class ChangeDirCommand : public BuiltInCommand {
+public:
     char **lastdir;
     ChangeDirCommand(const char* cmd_line, char** plastPwd);
     virtual ~ChangeDirCommand() {}
