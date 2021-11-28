@@ -140,7 +140,6 @@ public:
     JobEntry *getLastStoppedJob(int *jobId);
     JobEntry *getMaxJobId();
     JobEntry *getJobByPID(pid_t pid);
-    // TODO: Add extra methods or modify exisitng ones as needed
 };
 
 class JobsCommand : public BuiltInCommand {

@@ -118,7 +118,7 @@ void ExternalCommand::execute() {
         }else{
             int status,wstatus;
 
-            proccessPID = son;
+            processPID = son;
             waitpid(son,&wstatus,0);
             status = WEXITSTATUS(wstatus);
         }
@@ -190,7 +190,7 @@ JobsList::JobsList():MaxJob(0),Total(0) {}
 JobsList::~JobsList() = default;
 
 void JobsList::addJob(Command *cmd, bool isStopped) {
-    JobEntry* NewJob = new JobEntry;
+    auto* NewJob = new JobEntry;
     NewJob->cmd = cmd;
     if(!isStopped)
         NewJob->state = JobEntry::RUNNING;
@@ -213,21 +213,21 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
 
 void JobsList::printJobsList() {
     removeFinishedJobs();
-    for(int i = 0; i < Jobs.size(); i++){
-        cout << "[" << Jobs[i]->jobID << "] " << Jobs[i]->cmd->cmdSyntax << " : " << Jobs[i]->cmd->processPID << " "
-        << (int) difftime(Jobs[i]->StartTime,time(nullptr)) << " secs" << endl;
+    for(auto & Job : Jobs){
+        cout << "[" << Job->jobID << "] " << Job->cmd->cmdSyntax << " : " << Job->cmd->processPID << " "
+        << (int) difftime(Job->StartTime,time(nullptr)) << " secs" << endl;
     }
 }
 
 void JobsList::printJobswithpid() {
-    for(int i = 0; i < Jobs.size(); i++){
-        cout << Jobs[i]->cmd->proccessPID << ": " << Jobs[i]->cmd->cmdSyntax << endl;
+    for(auto & Job : Jobs){
+        cout << Job->cmd->processPID << ": " << Job->cmd->cmdSyntax << endl;
     }
 }
 
 void JobsList::killAllJobs() {
-    for(int i = 0; i < Jobs.size(); i++){
-        if (kill(Jobs[i]->cmd->proccessPID,SIGKILL) == -1){
+    for(auto & Job : Jobs){
+        if (kill(Job->cmd->processPID,SIGKILL) == -1){
             perror("smash error: kill failed");
             return;
         }
@@ -236,11 +236,72 @@ void JobsList::killAllJobs() {
 
 void JobsList::removeFinishedJobs() {
     for(int i = 0; i < Jobs.size();i++) {
-        int son = waitpid(Jobs[i]->cmd->proccessPID, nullptr, WNOHANG);
+        int son = waitpid(Jobs[i]->cmd->processPID, nullptr, WNOHANG);
         if(son != 0){
-
-           // Jobs.erase(std::next(Jobs.begin(), 1))
+            JobEntry* ToDelete = this->getJobByPID(son);
+            auto n = std::find(Jobs.begin(), Jobs.end(), ToDelete);
+            Jobs.erase(std::next(Jobs.begin(), n - Jobs.begin()));
+            delete ToDelete;
         }
+    }
+}
+
+JobsList::JobEntry *JobsList::getJobById(int jobId) {
+    if(Jobs.empty())
+        return nullptr;
+    for(auto & Job : Jobs){
+        if(Job->jobID == jobId)
+            return Job;
+    }
+}
+
+void JobsList::removeJobById(int jobId) {
+    for(int i = 0; i < Jobs.size();i++){
+        if(Jobs[i]->jobID == jobId){
+            JobEntry* toDelete = Jobs[i];
+            Jobs.erase(std::next(Jobs.begin(),i));
+            delete toDelete;
+            return;
+        }
+    }
+}
+
+JobsList::JobEntry *JobsList::getLastJob(int *lastJobId) {
+    if(Jobs.empty())
+        return nullptr;
+    return Jobs[Jobs.size()-1];
+}
+
+JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
+    if(Jobs.empty())
+        return nullptr;
+    for(int i = Jobs.size()-1; i > 0; i--){
+        if(Jobs[i]->state == JobEntry::STOPPED){
+            return Jobs[i];
+        }
+    }
+}
+
+JobsList::JobEntry *JobsList::getMaxJobId() {
+    int max;
+    JobEntry* Job;
+    if(Jobs.empty())
+        return nullptr;
+    for(int i = Jobs.size()-1; i > 0; i--){
+        if(Jobs[i]->cmd->processPID > max){
+            max = Jobs[i]->cmd->processPID;
+            Job = Jobs[i];
+        }
+    }
+    return Job;
+}
+
+JobsList::JobEntry *JobsList::getJobByPID(pid_t pid) {
+    if(Jobs.empty())
+        return nullptr;
+    for(auto & Job : Jobs){
+        if(Job->cmd->processPID == pid)
+            return Job;
     }
 }
 
