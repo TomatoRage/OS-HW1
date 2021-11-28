@@ -17,7 +17,7 @@ enum CommandType{
     BUILTIN,
     SPECIAL,
     PIPE,
-    REDIRECTION,
+    REDIRECTION
 };
 
 class Command {
