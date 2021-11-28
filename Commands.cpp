@@ -238,7 +238,7 @@ void JobsList::removeFinishedJobs() {
     for(int i = 0; i < Jobs.size();i++) {
         int son = waitpid(Jobs[i]->cmd->proccessPID, nullptr, WNOHANG);
         if(son != 0){
-            
+
            // Jobs.erase(std::next(Jobs.begin(), 1))
         }
     }
