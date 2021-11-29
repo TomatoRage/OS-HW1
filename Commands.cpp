@@ -398,7 +398,7 @@ void JobsList::removeFinishedJobs() {
         int son = waitpid(Jobs[i]->cmd->processPID, nullptr, WNOHANG);
         if(son != 0){
             JobEntry* ToDelete = this->getJobByPID(son);
-            auto n = std::find(Jobs.begin(), Jobs.end(), ToDelete);
+            auto n = find(Jobs.begin(), Jobs.end(), ToDelete);
             Jobs.erase(std::next(Jobs.begin(), n - Jobs.begin()));
             delete ToDelete;
         }
@@ -562,6 +562,17 @@ void BackgroundCommand::execute() {
     Jobs->getJobById(jobid)->state = JobsList::JobEntry::RUNNING;
     cout << cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->processPID << endl;
 }
+
+chpromptCommand::chpromptCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
+
+void chpromptCommand::execute() {
+    if(Arguments.size() == 1)
+        SmallShell::getInstance().smashName = "smash>";
+    else {
+        SmallShell::getInstance().smashName = const_cast<char *>(Arguments[1].c_str());
+    }
+}
+
 
 HeadCommand::HeadCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {}
 

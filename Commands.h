@@ -92,7 +92,7 @@ public:
 class chpromptCommand : public BuiltInCommand {
 public:
     chpromptCommand(const char *cmd_line);
-    virtual ~chpromptCommand();
+    virtual ~chpromptCommand() = default;
     void execute() override;
 };
 
