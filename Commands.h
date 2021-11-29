@@ -29,7 +29,7 @@ public:
     pid_t processPID;
 
     Command(const char* cmd_line,CommandType type);
-    virtual ~Command();
+    virtual ~Command() = default;
     virtual void execute() = 0;
     static vector<string> FillInArguments(const string& cmdline);
     //virtual void prepare();
