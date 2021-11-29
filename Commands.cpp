@@ -108,14 +108,18 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
 
 void ExternalCommand::execute() {
     pid_t son = fork();
-    if(son == -1)
+    if(son == -1) {
         perror("smash error: fork failed");
+        return;
+    }
     if(Type == FGEXTERNAL){
         if(son == 0){
             setpgrp();
             char *Args[] = {"-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
-            if(execv("/bin/bash",Args) == -1)
+            if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
+                return;
+            }
         }else{
             int status,wstatus;
 
@@ -127,10 +131,129 @@ void ExternalCommand::execute() {
         if(son == 0){
             setpgrp();
             char *Args[] = {"-c", const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 2).c_str()), NULL};
-            if(execv("/bin/bash",Args) == -1)
+            if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
+                return;
+            }
         }else
             processPID = son;
+    }
+}
+
+PipeCommand::PipeCommand(const char *cmd_line): Command(cmd_line,PIPE) { }
+
+void PipeCommand::execute() {
+    int idx = cmdSyntax.find("|&");
+    if(idx == string::npos){
+        string inp = cmdSyntax.substr(cmdSyntax.find("|")+1);
+        string outp = cmdSyntax.substr(0,cmdSyntax.find("|")-1);
+        int myPipe[2];
+        char buff[200];
+        int result;
+
+        if(pipe(myPipe) == -1){
+
+            perror("smash error: pipe failed");
+            return;
+        }
+
+        pid_t son = fork();
+        if(son == -1) {
+            perror("smash error: fork failed");
+            return;
+        }
+        if(son == 0){
+            if(close(myPipe[1]) == -1){
+                perror("smash error: close failed");
+                return;
+            }
+            int HasBeenRead = 1;
+            while(HasBeenRead) {
+                HasBeenRead = read(myPipe[0], buff, 200);
+                if(HasBeenRead == -1){
+                    perror("smash error: read failed");
+                    return;
+                }
+                SmallShell::getInstance().CreateCommand(inp.c_str());
+                if(write(1,buff,200) == -1){
+                    perror("smash error: write failed");
+                    return;
+                }
+            }
+        }else{
+            if(close(myPipe[0] == -1)){
+                perror("smash error: close failed");
+                return;
+            }
+            int HasBeenRead = 1;
+            while(HasBeenRead) {
+                SmallShell::getInstance().CreateCommand(outp.c_str());
+                HasBeenRead = read(1,buff,200);
+                if(HasBeenRead == -1) {
+                    perror("smash error: read failed");
+                    return;
+                }
+                if(write(myPipe[1],buff,200) == -1){
+                    perror("smash error: write failed");
+                    return;
+                }
+            }
+        }
+    }else{
+        string inp = cmdSyntax.substr(cmdSyntax.find("|")+2);
+        string outp = cmdSyntax.substr(0,cmdSyntax.find("|")-1);
+        int myPipe[2];
+        char buff[200];
+
+        if(pipe(myPipe) == -1){
+
+            perror("smash error: pipe failed");
+            return;
+        }
+
+        pid_t son = fork();
+        if(son == -1) {
+            perror("smash error: fork failed");
+            return;
+        }
+        if(son == 0){
+            if(close(myPipe[1]) == -1){
+                perror("smash error: close failed");
+                return;
+            }
+            int HasBeenRead = 1;
+            while(HasBeenRead) {
+                HasBeenRead = read(myPipe[0], buff, 200);
+                if(HasBeenRead == -1) {
+                    perror("smash error: read failed");
+                    return;
+                }
+                SmallShell::getInstance().CreateCommand(inp.c_str());
+                write(1,buff,200);
+                if(write(1,buff,200) == -1){
+                    perror("smash error: write failed");
+                    return;
+                }
+            }
+        }else{
+            if(close(myPipe[0] == -1)){
+                perror("smash error: close failed");
+                return;
+            }
+            int HasBeenRead = 1;
+            while(HasBeenRead) {
+                SmallShell::getInstance().CreateCommand(outp.c_str());
+                HasBeenRead = read(2,buff,200);
+                if(HasBeenRead == -1) {
+                    perror("smash error: read failed");
+                    return;
+                }
+                if(write(myPipe[1],buff,200) == -1){
+                    perror("smash error: write failed");
+                    return;
+                }
+            }
+        }
     }
 }
 
