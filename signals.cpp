@@ -10,7 +10,7 @@ void ctrlZHandler(int sig_num) {
     cout << "smash: got ctrl-Z" << endl;
     if (SmallShell::getInstance().currCommand == NULL) return;
     if (SmallShell::getInstance().currCommand->Type == FGEXTERNAL){
-        int proID = SmallShell::getInstance().currCommand->processPID;
+        pid_t proID = SmallShell::getInstance().currCommand->processPID;
         if (kill(proID, SIGSTOP) == -1) {
             perror("smash error: kill failed");
             return;

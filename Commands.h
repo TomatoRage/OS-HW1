@@ -50,7 +50,6 @@ public:
 };
 
 class PipeCommand : public Command {
-    // TODO: Add your data members
 public:
     PipeCommand(const char* cmd_line);
     virtual ~PipeCommand() {}
@@ -59,7 +58,6 @@ public:
 };
 
 class RedirectionCommand : public Command {
-    // TODO: Add your data members
 public:
     explicit RedirectionCommand(const char* cmd_line);
     virtual ~RedirectionCommand() {}
@@ -180,7 +178,6 @@ public:
     HeadCommand(const char* cmd_line);
     virtual ~HeadCommand() {}
     void execute() override;
-    //TODO:Implement This
 };
 
 
@@ -204,7 +201,6 @@ public:
     }
     ~SmallShell();
     void executeCommand(const char* cmd_line);
-    // TODO: add extra methods as needed
 
 };
 
