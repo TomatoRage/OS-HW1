@@ -297,21 +297,24 @@ void RedirectionCommand::execute() {
     }
 }
 
-ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line),lastdir(plastPwd) {}
+ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line),lastdir(*plastPwd) {
+    if(*plastPwd == nullptr)
+        lastdir.clear();
+}
 
 void ChangeDirCommand::execute() {
     int result;
     if(Arguments.size() > 2) {
         cerr << "smash error: cd: too many arguments" << endl;
         return;
-    }else if(Arguments[1] == "-" && lastdir == nullptr){
+    }else if(Arguments[1] == "-" && lastdir.empty()){
         cerr << "smash error: cd: OLDPWD not set" << endl;
         return;
     }
-    if(Arguments[2] == "-"){
-        result = chdir(*lastdir);
+    if(Arguments[1] == "-"){
+        result = chdir((lastdir).c_str());
     }else{
-        result = chdir(Arguments[2].c_str());
+        result = chdir(Arguments[1].c_str());
     }
     if(result == -1) {
         perror("smash error: chdir failed");
@@ -344,7 +347,7 @@ void ShowPidCommand::execute() {
 QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs) {}
 
 void QuitCommand::execute() {
-    if(Arguments[1] == "kill"){
+    if(Arguments.size() == 2 && Arguments[1] == "kill"){
         cout << "sending SIGKILL signal to " << jobs->Total << " jobs:" << endl;
         jobs->printJobswithpid();
         jobs->killAllJobs();
@@ -678,7 +681,7 @@ void HeadCommand::execute() {
 SmallShell::SmallShell() {
 
     currCommand = NULL;
-    oldDirName = NULL;
+    oldDirname = NULL;
     smashName = new char[6];
     jobList = new JobsList;
     strcpy(smashName, "smash");
@@ -688,12 +691,8 @@ SmallShell::SmallShell() {
 
 SmallShell::~SmallShell() {
 
-    if (oldDirName != NULL) {
-        delete oldDirName;
-    }
-    oldDirName = NULL;//
     delete smashName;
-    smashName = NULL;
+    delete oldDirname;
     delete jobList;
 }
 
@@ -771,10 +770,25 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     }
 
     if (strcmp(newArgs[0], "cd\0") == 0) {
-        cmd = new ChangeDirCommand(tmpCmd, &oldDirName);
+
+        char* Dir;
+        int Size = 50;
+        Dir = getcwd(NULL,Size);
+        while(!Dir) {
+            Size += 20;
+            Dir = getcwd(NULL, Size);
+        }
+
+        char* Temp = new char[Size];
+
+        strcpy(Temp,Dir);
+
+        oldDirname = &Temp;
+
+        cmd = new ChangeDirCommand(tmpCmd, oldDirname);
         currCommand = cmd;
         FreeArgs(NewnumOfArgs,newArgs );
-        FreeArgs(NumOfArgs,Args );
+        FreeArgs(NumOfArgs,Args);
         delete[] tmpCmd;
         return cmd;
     }
