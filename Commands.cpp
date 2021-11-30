@@ -297,9 +297,10 @@ void RedirectionCommand::execute() {
     }
 }
 
-ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line),lastdir(*plastPwd) {
-    if(*plastPwd == nullptr)
+ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line) {
+    if (plastPwd == nullptr) {
         lastdir.clear();
+    } else lastdir = *plastPwd;
 }
 
 void ChangeDirCommand::execute() {
@@ -320,6 +321,22 @@ void ChangeDirCommand::execute() {
         perror("smash error: chdir failed");
         return;
     }
+
+    delete[] SmallShell::getInstance().oldDirname;
+
+    char* Dir;
+    int Size = 50;
+    Dir = getcwd(NULL,Size);
+    while(!Dir) {
+        Size += 20;
+        Dir = getcwd(NULL, Size);
+    }
+
+    char* Temp = new char[Size];
+
+    strcpy(Temp,Dir);
+
+    SmallShell::getInstance().oldDirname = &Temp;
 }
 
 GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
@@ -782,8 +799,6 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
         char* Temp = new char[Size];
 
         strcpy(Temp,Dir);
-
-        oldDirname = &Temp;
 
         cmd = new ChangeDirCommand(tmpCmd, oldDirname);
         currCommand = cmd;
