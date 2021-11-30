@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <time.h>
 #include <fcntl.h>
+#include <algorithm>
 #include "Commands.h"
 
 using namespace std;
@@ -80,20 +81,24 @@ void _removeBackgroundSign(char* cmd_line) {
 
 Command::Command(const char *cmd_line,CommandType type) {
     string cmd = _trim(string(cmd_line));
+    Arguments = *(new vector<string>);
     cmdSyntax = cmd;
     this->Type = type;
-    Arguments = FillInArguments(cmd);
+    FillInArguments(cmd);
     this->processPID = -1;
 }
 
-vector<string> Command::FillInArguments(const string& cmdline) {
-    vector<string> Vicky;
-    char **Args;
+Command::~Command() noexcept {
+    //TODO:Delete Vector
+}
+
+void Command::FillInArguments(const string& cmdline) {
+    char** Args = new char*[20];
     int size = _parseCommandLine(cmdline.c_str(),Args);
     for(int i = 0; i < size; i++){
-        Vicky.emplace_back(Args[i]);
+        Arguments.insert(std::next(Arguments.begin(),i),Args[i]);
     }
-    return Vicky;
+    delete Args;
 }
 
 BuiltInCommand::BuiltInCommand(const char *cmd_line): Command(cmd_line,BUILTIN) { }
@@ -108,14 +113,18 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
 
 void ExternalCommand::execute() {
     pid_t son = fork();
-    if(son == -1)
+    if(son == -1) {
         perror("smash error: fork failed");
+        return;
+    }
     if(Type == FGEXTERNAL){
         if(son == 0){
             setpgrp();
-            char *Args[] = {"-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
-            if(execv("/bin/bash",Args) == -1)
+            char *Args[] = {"bin/bash","-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
+            if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
+                return;
+            }
         }else{
             int status,wstatus;
 
@@ -126,9 +135,11 @@ void ExternalCommand::execute() {
     }else{
         if(son == 0){
             setpgrp();
-            char *Args[] = {"-c", const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 2).c_str()), NULL};
-            if(execv("/bin/bash",Args) == -1)
+            char *Args[] = {"bin/bash","-c",const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 2).c_str()), NULL};
+            if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
+                return;
+            }
         }else
             processPID = son;
     }
@@ -302,20 +313,23 @@ void ChangeDirCommand::execute() {
     }else{
         result = chdir(Arguments[2].c_str());
     }
-    if(result == -1)
+    if(result == -1) {
         perror("smash error: chdir failed");
+        return;
+    }
 }
 
 GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
 
 void GetCurrDirCommand::execute() {
     char* Dir;
-    getwd(Dir);
-
-    if (Dir == nullptr){
-        perror("smash error: getcwd failed");
-        return;
+    int Size = 50;
+    Dir = getcwd(NULL,Size);
+    while(!Dir){
+        Size += 20;
+        Dir = getcwd(NULL,Size);
     }
+
     cout << Dir << endl;
 }
 
@@ -340,15 +354,7 @@ void QuitCommand::execute() {
 
 JobsList::JobsList():MaxJob(0),Total(0) {}
 
-
-JobsList::~JobsList() {
-    for (int i = Jobs.size() - 1; i > 0; i--) {
-        JobEntry *j = Jobs[i];
-        Jobs.pop_back();
-        delete j;
-    }
-
-}
+JobsList::~JobsList() = default;
 
 void JobsList::addJob(Command *cmd, bool isStopped) {
     auto* NewJob = new JobEntry;
@@ -376,7 +382,7 @@ void JobsList::printJobsList() {
     removeFinishedJobs();
     for(auto & Job : Jobs){
         cout << "[" << Job->jobID << "] " << Job->cmd->cmdSyntax << " : " << Job->cmd->processPID << " "
-        << (int) difftime(Job->StartTime,time(nullptr)) << " secs" << endl;
+        << (int) difftime(time(nullptr),Job->StartTime) << " secs" << endl;
     }
 }
 
@@ -569,7 +575,7 @@ chpromptCommand::chpromptCommand(const char *cmd_line): BuiltInCommand(cmd_line)
 
 void chpromptCommand::execute() {
     if(Arguments.size() == 1)
-        SmallShell::getInstance().smashName = "smash>";
+        SmallShell::getInstance().smashName = "smash";
     else {
         SmallShell::getInstance().smashName = const_cast<char *>(Arguments[1].c_str());
     }
@@ -710,17 +716,19 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
         Args[i] = NULL;
     }
     int NumOfArgs = _parseCommandLine(cmd_line, Args);
-    cmd = new PipeCommand(cmd_line);
+
     if (NumOfArgs == 0)
         return NULL;
     if (strchr(cmd_line, '|')) {
         cmd->Type=PIPE;
+        cmd = new PipeCommand(cmd_line);
         currCommand = cmd;
         FreeArgs(NumOfArgs,Args );
         return cmd;
     }
     if (strchr(cmd_line, '>')) {
         cmd->Type=REDIRECTION;
+        cmd = new RedirectionCommand(cmd_line);
         currCommand = cmd;
         FreeArgs(NumOfArgs, Args);
         return cmd;
@@ -836,10 +844,12 @@ void SmallShell::executeCommand(const char *cmd_line) {
 
     currCommand = CreateCommand(cmd_line);
     if (currCommand) {
+
         jobList->removeFinishedJobs();
         if (currCommand->Type == BGEXTERNAL) {
             jobList->addJob(currCommand);
         }
+
         currCommand->execute();
     }
 

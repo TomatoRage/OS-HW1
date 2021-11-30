@@ -29,9 +29,9 @@ public:
     pid_t processPID;
 
     Command(const char* cmd_line,CommandType type);
-    virtual ~Command() = default;
+    virtual ~Command();
     virtual void execute() = 0;
-    static vector<string> FillInArguments(const string& cmdline);
+    void FillInArguments(const string& cmdline);
     //virtual void prepare();
     virtual void cleanup();
 };
