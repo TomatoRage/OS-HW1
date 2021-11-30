@@ -129,7 +129,7 @@ void ExternalCommand::execute() {
             int status,wstatus;
 
             processPID = son;
-            waitpid(son,&wstatus,0);
+            waitpid(son,&wstatus,WUNTRACED);
             status = WEXITSTATUS(wstatus);
         }
     }else{
@@ -382,7 +382,10 @@ void JobsList::printJobsList() {
     removeFinishedJobs();
     for(auto & Job : Jobs){
         cout << "[" << Job->jobID << "] " << Job->cmd->cmdSyntax << " : " << Job->cmd->processPID << " "
-        << (int) difftime(time(nullptr),Job->StartTime) << " secs" << endl;
+        << (int) difftime(time(nullptr),Job->StartTime) << " secs";
+        if(Job->state == JobEntry::STOPPED)
+            cout << " (Stopped)";
+        cout << endl;
     }
 }
 
