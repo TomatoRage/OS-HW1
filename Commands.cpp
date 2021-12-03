@@ -547,7 +547,7 @@ void ForegroundCommand::execute() {
     cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
     Jobs->removeJobById(jobid);
-    waitpid(PID, nullptr,0);
+    waitpid(PID, nullptr,WUNTRACED);
 }
 
 BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
@@ -626,19 +626,24 @@ void HeadCommand::execute() {
             return;
         }
         if(text==0) return;
+
         while (NumOfRows>0){
-            while (*buff != '\n') {
-                cout << buff;
-                text = read(file, buff, 1);
-                if (text < 0) {
-                    perror("smash error: read failed");
-                    return;
-                }
-                if(text==0) return;
+
+            cout << buff;
+            text = read(file, buff, 1);
+            if (text < 0) {
+                perror("smash error: read failed");
+                return;
             }
-            NumOfRows--;
-            cout << '\n';
+
+            if(text==0) return;
+
+            if(*buff == '\n')
+                NumOfRows--;
         }
+
+        cout << '\n';
+
     } else {
         if (Arguments[1][0] == '-') {
             try {
@@ -657,28 +662,36 @@ void HeadCommand::execute() {
             perror("smash error: open failed");
             return;
         }
+
         buff = new char[1];
         int text = read(file, buff, 1);
+        bool Flag = false;
+
         if (text < 0) {
             perror("smash error: read failed");
             return;
         }
+
         if(text==0) return;
+
         while (NumOfRows>0){
-            while (*buff != '\n') {
-                cout << buff;
-                text = read(file, buff, 1);
-                if (text < 0) {
-                    perror("smash error: read failed");
-                    return;
-                }
-                if(text==0) return;
-            }
-            NumOfRows--;
-            cout << '\n';
+
+        cout << buff;
+        text = read(file, buff, 1);
+        if (text < 0) {
+            perror("smash error: read failed");
+            return;
         }
 
+        if(text==0) return;
+
+        if(*buff == '\n')
+             NumOfRows--;
+        }
+
+        cout << '\n';
     }
+
     delete buff;
     SmallShell::getInstance().currCommand=NULL;
 }
