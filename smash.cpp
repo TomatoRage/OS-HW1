@@ -25,8 +25,7 @@ int main(int argc, char* argv[]) {
     while(true) {
         std::cout <<SmallShell::getInstance().smashName << "> ";
         std::string cmd_line;
-        if(!std::getline(std::cin, cmd_line))
-            std::cin.clear();
+        std::getline(std::cin, cmd_line);
         smash.executeCommand(cmd_line.c_str());
     }
     return 0;

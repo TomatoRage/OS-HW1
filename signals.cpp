@@ -32,8 +32,6 @@ void ctrlCHandler(int sig_num) {
             return;
         }
         cout << "smash: process " << proID << " was killed" << endl;
-        int job = SmallShell::getInstance().jobList->getJobByPID(proID)->jobID;
-        SmallShell::getInstance().jobList->removeJobById(job);
     }
 
     SmallShell::getInstance().currCommand = NULL;
