@@ -3,6 +3,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "Commands.h"
+#include <time.h>
 #include "signals.h"
 
 int main(int argc, char* argv[]) {
@@ -24,7 +25,8 @@ int main(int argc, char* argv[]) {
     while(true) {
         std::cout <<SmallShell::getInstance().smashName << "> ";
         std::string cmd_line;
-        std::getline(std::cin, cmd_line);
+        if(!std::getline(std::cin, cmd_line))
+            std::cin.clear();
         smash.executeCommand(cmd_line.c_str());
     }
     return 0;
