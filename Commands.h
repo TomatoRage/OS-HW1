@@ -69,7 +69,7 @@ public:
 class ChangeDirCommand : public BuiltInCommand {
 public:
     string lastdir;
-    ChangeDirCommand(const char* cmd_line, char** plastPwd);
+    ChangeDirCommand(const char* cmd_line, string* plastPwd);
     virtual ~ChangeDirCommand() {}
     void execute() override;
 };
@@ -188,7 +188,7 @@ public:
     Command* currCommand;
     char* smashName;
     JobsList* jobList;
-    char** oldDirname;
+    string oldDirname;
     pid_t smashPID;
     Command *CreateCommand(const char* cmd_line);
     SmallShell(SmallShell const&)      = delete; // disable copy ctor

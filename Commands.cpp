@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <sstream>
 #include <sys/wait.h>
-#include <iomanip>
 #include <time.h>
 #include <fcntl.h>
 #include <algorithm>
@@ -126,11 +125,8 @@ void ExternalCommand::execute() {
                 return;
             }
         }else{
-            int status,wstatus;
-
             processPID = son;
-            waitpid(son,&wstatus,WUNTRACED);
-            status = WEXITSTATUS(wstatus);
+            waitpid(son, nullptr,WUNTRACED);
         }
     }else{
         if(son == 0){
@@ -297,11 +293,7 @@ void RedirectionCommand::execute() {
     }
 }
 
-ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd): BuiltInCommand(cmd_line) {
-    if (plastPwd == nullptr) {
-        lastdir.clear();
-    } else lastdir = *plastPwd;
-}
+ChangeDirCommand::ChangeDirCommand(const char *cmd_line, string* plastPwd): BuiltInCommand(cmd_line),lastdir(*plastPwd) {}
 
 void ChangeDirCommand::execute() {
     int result;
@@ -312,17 +304,6 @@ void ChangeDirCommand::execute() {
         cerr << "smash error: cd: OLDPWD not set" << endl;
         return;
     }
-    if(Arguments[1] == "-"){
-        result = chdir((lastdir).c_str());
-    }else{
-        result = chdir(Arguments[1].c_str());
-    }
-    if(result == -1) {
-        perror("smash error: chdir failed");
-        return;
-    }
-
-    delete[] SmallShell::getInstance().oldDirname;
 
     char* Dir;
     int Size = 50;
@@ -332,11 +313,18 @@ void ChangeDirCommand::execute() {
         Dir = getcwd(NULL, Size);
     }
 
-    char* Temp = new char[Size];
+    if(Arguments[1] == "-"){
+        result = chdir((lastdir).c_str());
+    }else{
+        result = chdir(Arguments[1].c_str());
+    }
+    if(result == -1) {
+        perror("smash error: chdir failed");
+        delete Dir;
+        return;
+    }
 
-    strcpy(Temp,Dir);
-
-    SmallShell::getInstance().oldDirname = &Temp;
+    SmallShell::getInstance().oldDirname = Dir;
 }
 
 GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
@@ -425,15 +413,14 @@ void JobsList::killAllJobs() {
 }
 
 void JobsList::removeFinishedJobs() {
-    for(int i = 0; i < Jobs.size();i++) {
-        int son = waitpid(Jobs[i]->cmd->processPID, nullptr, WNOHANG);
-        if(son != 0){
-            JobEntry* ToDelete = this->getJobByPID(son);
-            auto n = find(Jobs.begin(), Jobs.end(), ToDelete);
-            Jobs.erase(std::next(Jobs.begin(), n - Jobs.begin()));
-            delete ToDelete;
-        }
+    int Listsize = Jobs.size();
+    pid_t p;
+    p = waitpid(WAIT_ANY, NULL, WNOHANG);
+    while (p > 0) {
+        SmallShell::getInstance().jobList->removeJobById(getJobByPID(p)->jobID);
+        p = waitpid(WAIT_ANY, NULL, WNOHANG);
     }
+    int x = 5;
 }
 
 JobsList::JobEntry *JobsList::getJobById(int jobId) {
@@ -510,8 +497,8 @@ void KillCommand::execute() {
         return;
     }
     try{
-        sig = stoi(Arguments[1]);
-        job = stoi(Arguments[2]);
+        sig = stoi(Arguments[1]) * -1;
+        job = stoi(Arguments[2]) * - 1;
     }catch(...){
         cerr << "smash error: kill: invalid arguments" << endl;
         return;
@@ -557,9 +544,10 @@ void ForegroundCommand::execute() {
         perror("smash error: kill failed");
         return;
     }
-    cout << cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
+    cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
+    pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
     Jobs->removeJobById(jobid);
-    waitpid(Jobs->getJobById(jobid)->cmd->processPID, nullptr,0);
+    waitpid(PID, nullptr,0);
 }
 
 BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
@@ -698,7 +686,7 @@ void HeadCommand::execute() {
 SmallShell::SmallShell() {
 
     currCommand = NULL;
-    oldDirname = NULL;
+    oldDirname.clear();
     smashName = new char[6];
     jobList = new JobsList;
     strcpy(smashName, "smash");
@@ -709,7 +697,6 @@ SmallShell::SmallShell() {
 SmallShell::~SmallShell() {
 
     delete smashName;
-    delete oldDirname;
     delete jobList;
 }
 
@@ -739,15 +726,15 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     if (NumOfArgs == 0)
         return NULL;
     if (strchr(cmd_line, '|')) {
-        cmd->Type=PIPE;
         cmd = new PipeCommand(cmd_line);
+        cmd->Type=PIPE;
         currCommand = cmd;
         FreeArgs(NumOfArgs,Args );
         return cmd;
     }
     if (strchr(cmd_line, '>')) {
-        cmd->Type=REDIRECTION;
         cmd = new RedirectionCommand(cmd_line);
+        cmd->Type=REDIRECTION;
         currCommand = cmd;
         FreeArgs(NumOfArgs, Args);
         return cmd;
@@ -788,19 +775,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 
     if (strcmp(newArgs[0], "cd\0") == 0) {
 
-        char* Dir;
-        int Size = 50;
-        Dir = getcwd(NULL,Size);
-        while(!Dir) {
-            Size += 20;
-            Dir = getcwd(NULL, Size);
-        }
-
-        char* Temp = new char[Size];
-
-        strcpy(Temp,Dir);
-
-        cmd = new ChangeDirCommand(tmpCmd, oldDirname);
+        cmd = new ChangeDirCommand(tmpCmd, &oldDirname);
         currCommand = cmd;
         FreeArgs(NewnumOfArgs,newArgs );
         FreeArgs(NumOfArgs,Args);
