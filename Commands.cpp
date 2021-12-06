@@ -244,7 +244,7 @@ void RedirectionCommand::execute() {
     if(idx == string::npos){
         string File = cmdSyntax.substr(cmdSyntax.find(">")+1);
         string cmd = cmdSyntax.substr(0, cmdSyntax.find(">"));
-        int FD = open(File.c_str(),O_TRUNC | O_CREAT | O_WRONLY,0666);
+        int FD = open(_trim(File).c_str(),O_TRUNC | O_CREAT | O_WRONLY,0666);
         if(FD == -1){
             perror("smash error: open failed");
             return;
@@ -272,7 +272,7 @@ void RedirectionCommand::execute() {
     }else{
         string File = cmdSyntax.substr(idx+2);
         string cmd = cmdSyntax.substr(0,idx);
-        int FD = open(File.c_str(),O_APPEND | O_CREAT | O_WRONLY,0666);
+        int FD = open(_trim(File).c_str(),O_APPEND | O_CREAT | O_WRONLY,0666);
         if(FD == -1){
             perror("smash error open failed");
             return;
