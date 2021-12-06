@@ -391,10 +391,12 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
         NewJob->state = JobEntry::RUNNING;
     else
         NewJob->state = JobEntry::STOPPED;
+
     if(getMaxJobId())
         NewJob->jobID = getMaxJobId()->jobID + 1;
     else
         NewJob->jobID = 1;
+
     NewJob->StartTime = time(nullptr);
 
     if(NewJob->StartTime == -1){
@@ -404,7 +406,6 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
     }
     Jobs.emplace_back(NewJob);
 
-    MaxJob++;
     Total++;
 
 }
@@ -488,13 +489,13 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
 }
 
 JobsList::JobEntry *JobsList::getMaxJobId() {
-    int max;
+    int max = 0;
     JobEntry* Job;
     if(Jobs.empty())
         return nullptr;
-    for(int i = Jobs.size()-1; i > 0; i--){
-        if(Jobs[i]->cmd->processPID > max){
-            max = Jobs[i]->cmd->processPID;
+    for(int i = Jobs.size()-1; i >= 0; i--){
+        if(Jobs[i]->jobID > max){
+            max = Jobs[i]->jobID;
             Job = Jobs[i];
         }
     }
