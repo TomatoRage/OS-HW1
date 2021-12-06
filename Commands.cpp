@@ -578,7 +578,7 @@ void ForegroundCommand::execute() {
         perror("smash error: kill failed");
         return;
     }
-    cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
+    cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
     SmallShell::getInstance().currCommand = new ExternalCommand(*(ExternalCommand*)(Jobs->getJobById(jobid)->cmd));
     SmallShell::getInstance().currCommand->Type = FGEXTERNAL;
@@ -603,11 +603,11 @@ void BackgroundCommand::execute() {
     }if(jobid == -1 && Jobs->getLastStoppedJob(&jobid) == nullptr){
         cerr << "smash error: bg: there is no stopped jobs to resume" << endl;
         return;
-    }if(jobid != -1 && Jobs->getJobById(jobid)->state == JobsList::JobEntry::RUNNING){
-        cerr << "smash error: bg: job-id " << jobid << " is already running in the background" << endl;
-        return;
     }if(jobid != -1 && Jobs->getJobById(jobid) == nullptr){
         cerr << "smash error: bg: job-id " << jobid << " does not exist" << endl;
+        return;
+    }if(jobid != -1 && Jobs->getJobById(jobid)->state == JobsList::JobEntry::RUNNING) {
+        cerr << "smash error: bg: job-id " << jobid << " is already running in the background" << endl;
         return;
     }
     if(kill(Jobs->getJobById(jobid)->cmd->processPID,SIGCONT) == -1){
