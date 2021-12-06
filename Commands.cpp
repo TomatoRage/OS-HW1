@@ -586,7 +586,7 @@ HeadCommand::HeadCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {}
 void HeadCommand::execute() {
     int NumOfRows;
     int file;
-    char * buff;
+    char * buff=NULL;
     if (Arguments.size() == 1) {
         cerr << "smash error: head: not enough arguments" << endl;
     } else if (Arguments.size() == 2) {
@@ -618,7 +618,9 @@ void HeadCommand::execute() {
 
         while (NumOfRows>0){
 
-            cout << buff;
+            cout << *buff;
+            buff=NULL;
+            buff = new char[1];
             text = read(file, (void*)buff, size);
             if (text < 0) {
                 perror("smash error: read failed");
@@ -627,8 +629,10 @@ void HeadCommand::execute() {
 
             if(text==0) return;
 
-            if(*buff == '\n')
+            if(*buff == '\n'){
                 NumOfRows--;
+            }
+
         }
         if(!NumOfRows)
             cout << '\n';
@@ -665,7 +669,9 @@ void HeadCommand::execute() {
 
         while (NumOfRows>0){
 
-        cout << buff;
+        cout << *buff;
+        buff=NULL;
+        buff = new char[1];
         text = read(file, (void*)buff, size);
         if (text < 0) {
             perror("smash error: read failed");
