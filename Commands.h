@@ -125,7 +125,6 @@ public:
         time_t StartTime;
     };
     int Total;
-    int MaxJob;
     vector<JobEntry*> Jobs;
 public:
     JobsList();

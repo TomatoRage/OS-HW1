@@ -379,7 +379,6 @@ void QuitCommand::execute() {
 }
 
 JobsList::JobsList(){
-    MaxJob = 0;
     Total = 0;
 }
 
@@ -392,7 +391,10 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
         NewJob->state = JobEntry::RUNNING;
     else
         NewJob->state = JobEntry::STOPPED;
-    NewJob->jobID = MaxJob + 1;
+    if(getMaxJobId())
+        NewJob->jobID = getMaxJobId()->jobID + 1;
+    else
+        NewJob->jobID = 1;
     NewJob->StartTime = time(nullptr);
 
     if(NewJob->StartTime == -1){
@@ -578,6 +580,7 @@ void ForegroundCommand::execute() {
     cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
     SmallShell::getInstance().currCommand = new ExternalCommand(*(ExternalCommand*)(Jobs->getJobById(jobid)->cmd));
+    SmallShell::getInstance().currCommand->Type = FGEXTERNAL;
     Jobs->removeJobById(jobid);
     waitpid(PID, nullptr,WUNTRACED);
 }
