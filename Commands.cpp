@@ -402,7 +402,7 @@ void JobsList::printJobsList() {
 
 void JobsList::printJobswithpid() {
     for(auto & Job : Jobs){
-        cout << Job->cmd->processPID << ": " << Job->cmd->cmdSyntax << endl;
+        cout << Job->cmd->processPID << ": " << Job->cmd->cmdSyntax <<  endl;
     }
 }
 
@@ -424,8 +424,9 @@ void JobsList::removeFinishedJobs() {
         if(J)
             SmallShell::getInstance().jobList->removeJobById(J->jobID);
         p = waitpid(WAIT_ANY, NULL, WNOHANG);
+
     }
-    int x = 5;
+
 }
 
 JobsList::JobEntry *JobsList::getJobById(int jobId) {
@@ -442,6 +443,7 @@ void JobsList::removeJobById(int jobId) {
         if(Jobs[i]->jobID == jobId){
             JobEntry* toDelete = Jobs[i];
             Jobs.erase(std::next(Jobs.begin(),i));
+            Total--;
             delete toDelete;
             return;
         }
