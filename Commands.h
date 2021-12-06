@@ -46,6 +46,7 @@ public:
 class ExternalCommand : public Command {
 public:
     ExternalCommand(const char* cmd_line);
+    ExternalCommand(ExternalCommand& E);
     virtual ~ExternalCommand() = default;
     void execute() override;
 };

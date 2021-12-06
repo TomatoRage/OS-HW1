@@ -118,6 +118,10 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
 
 }
 
+ExternalCommand::ExternalCommand(ExternalCommand &E): Command(E) {
+    Type = E.Type;
+}
+
 void ExternalCommand::execute() {
     pid_t son = fork();
     if(son == -1) {
@@ -573,7 +577,7 @@ void ForegroundCommand::execute() {
     }
     cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
-    *(SmallShell::getInstance().currCommand) = *(Jobs->getJobById(jobid)->cmd);
+    SmallShell::getInstance().currCommand = new ExternalCommand(*(ExternalCommand*)(Jobs->getJobById(jobid)->cmd));
     Jobs->removeJobById(jobid);
     waitpid(PID, nullptr,WUNTRACED);
 }
