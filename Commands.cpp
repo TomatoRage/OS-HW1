@@ -597,9 +597,9 @@ chpromptCommand::chpromptCommand(const char *cmd_line): BuiltInCommand(cmd_line)
 
 void chpromptCommand::execute() {
     if(Arguments.size() == 1)
-        SmallShell::getInstance().smashName = "smash";
+        strcpy(SmallShell::getInstance().smashName,"smash");
     else {
-        SmallShell::getInstance().smashName = const_cast<char *>(Arguments[1].c_str());
+        strcpy(SmallShell::getInstance().smashName,const_cast<char *>(Arguments[1].c_str()));
     }
 }
 
@@ -730,7 +730,6 @@ SmallShell::SmallShell() {
 }
 
 SmallShell::~SmallShell() {
-
     delete smashName;
     delete jobList;
 }
@@ -893,7 +892,7 @@ void SmallShell::executeCommand(const char *cmd_line) {
         }
 
         currCommand->execute();
-        currCommand = nullptr;
+        delete currCommand;
     }
 
 }
