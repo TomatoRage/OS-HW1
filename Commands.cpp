@@ -609,7 +609,7 @@ void HeadCommand::execute() {
     int file;
     char * buff=NULL;
     if (Arguments.size() == 1) {
-        cerr << "smash error: head: not enough arguments" << endl;
+        cerr << "smash error: head: invalid arguments" << endl;
     } else if (Arguments.size() == 2) {
         if (Arguments[1][0] == '-') {
             try {
@@ -618,8 +618,11 @@ void HeadCommand::execute() {
                 cerr << "smash error: head: invalid arguments" << endl;
                 return;
             }
-            cerr << "smash error: head: not enough arguments" << endl;
-            return;
+            file = open(Arguments[1].c_str(), O_RDONLY, 0666);
+            if (file < 0) {
+                perror("smash error: open failed");
+                return;
+            }
         } else {
             NumOfRows = 10;
         }
