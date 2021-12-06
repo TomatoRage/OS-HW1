@@ -356,14 +356,17 @@ QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(c
 
 void QuitCommand::execute() {
     if(Arguments.size() == 2 && Arguments[1] == "kill"){
-        cout << "sending SIGKILL signal to " << jobs->Total << " jobs:" << endl;
+        cout << "smash: sending SIGKILL signal to " << jobs->Total << " jobs:" << endl;
         jobs->printJobswithpid();
         jobs->killAllJobs();
     }
     exit(0);
 }
 
-JobsList::JobsList():MaxJob(0),Total(0) {}
+JobsList::JobsList(){
+    MaxJob = 0;
+    Total = 0;
+}
 
 JobsList::~JobsList() = default;
 
@@ -416,7 +419,6 @@ void JobsList::killAllJobs() {
 }
 
 void JobsList::removeFinishedJobs() {
-    int Listsize = Jobs.size();
     pid_t p;
     p = waitpid(WAIT_ANY, NULL, WNOHANG);
     while (p > 0) {
@@ -436,10 +438,11 @@ JobsList::JobEntry *JobsList::getJobById(int jobId) {
         if(Job->jobID == jobId)
             return Job;
     }
+    return nullptr;
 }
 
 void JobsList::removeJobById(int jobId) {
-    for(int i = 0; i < Jobs.size();i++){
+    for(unsigned int i = 0; i < Jobs.size();i++){
         if(Jobs[i]->jobID == jobId){
             JobEntry* toDelete = Jobs[i];
             Jobs.erase(std::next(Jobs.begin(),i));
@@ -464,6 +467,7 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
             return Jobs[i];
         }
     }
+    return nullptr;
 }
 
 JobsList::JobEntry *JobsList::getMaxJobId() {
@@ -487,6 +491,7 @@ JobsList::JobEntry *JobsList::getJobByPID(pid_t pid) {
         if(Job->cmd->processPID == pid)
             return Job;
     }
+    return nullptr;
 }
 
 JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),Jobs(jobs) {}
@@ -892,7 +897,6 @@ void SmallShell::executeCommand(const char *cmd_line) {
         }
 
         currCommand->execute();
-        delete currCommand;
     }
 
 }
