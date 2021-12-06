@@ -144,7 +144,7 @@ void ExternalCommand::execute() {
 PipeCommand::PipeCommand(const char *cmd_line): Command(cmd_line,PIPE) { }
 
 void PipeCommand::execute() {
-    int idx = cmdSyntax.find("|&");
+    unsigned int idx = cmdSyntax.find("|&");
     string inp;
     string outp;
     int myPipe[2];
@@ -235,7 +235,7 @@ RedirectionCommand::RedirectionCommand(const char *cmd_line): Command(cmd_line,R
 }
 
 void RedirectionCommand::execute() {
-    int idx = cmdSyntax.find(">>");
+    unsigned int idx = cmdSyntax.find(">>");
     if(idx == string::npos){
         string File = cmdSyntax.substr(cmdSyntax.find(">")+1);
         string cmd = cmdSyntax.substr(0, cmdSyntax.find(">"));
