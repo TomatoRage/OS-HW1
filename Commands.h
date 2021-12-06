@@ -33,7 +33,7 @@ public:
     virtual void execute() = 0;
     void FillInArguments(const string& cmdline);
     //virtual void prepare();
-    virtual void cleanup();
+    //virtual void cleanup();
 };
 
 class BuiltInCommand : public Command {
@@ -63,7 +63,7 @@ public:
     virtual ~RedirectionCommand() {}
     void execute() override;
     //void prepare() override;
-    void cleanup() override;
+    //void cleanup() override;
 };
 
 class ChangeDirCommand : public BuiltInCommand {

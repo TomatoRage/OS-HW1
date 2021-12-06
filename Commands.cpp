@@ -154,58 +154,79 @@ void PipeCommand::execute() {
         inp = cmdSyntax.substr(cmdSyntax.find("|")+1);
         outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
         Stream = 1;
-
     }else{
         string inp = cmdSyntax.substr(cmdSyntax.find("|")+2);
         string outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
         Stream = 2;
     }
-
-    if(pipe(myPipe) == -1){
-        perror("smash error: pipe failed");
-        return;
-    }
-
     pid_t son = fork();
-    if(son == -1) {
+    if(son == -1){
         perror("smash error: fork failed");
         return;
     }
-    if(son == 0){
-        if(close(myPipe[1]) == -1){
-            perror("smash error: close failed");
+    if(son == 0) {
+        if (pipe(myPipe) == -1) {
+            perror("smash error: pipe failed");
+            return;
+        }
+
+        pid_t Grandson = fork();
+        if (Grandson == -1) {
+            perror("smash error: fork failed");
+            exit(1);
+        }
+        if (Grandson == 0) {
+            if (close(myPipe[1]) == -1) {
+                perror("smash error: close failed");
+                exit(1);
+            }
+            if (dup2(myPipe[0], 0) == -1) {
+                perror("smash error: dup2 failed");
+                exit(1);
+            }
+            if (close(myPipe[0]) == -1) {
+                perror("smash error: close failed");
+                exit(1);
+            }
+            Command *CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
+            CMD->execute();
             exit(0);
         }
-        if(dup2(myPipe[0],0) == -1){
-            perror("smash error: dup2 failed");
+        pid_t Grandson2 = fork();
+        if (Grandson2 == -1) {
+            perror("smash error: fork failed");
+            exit(1);
+        }
+        if (Grandson2 == 0) {
+            if (close(myPipe[0]) == -1) {
+                perror("smash error: close failed");
+                exit(1);
+            }
+            if (dup2(myPipe[1], Stream) == -1) {
+                perror("smash error: dup2 failed");
+                exit(1);
+            }
+            if (close(myPipe[1]) == -1) {
+                perror("smash error: close failed");
+                exit(1);
+            }
+            Command *CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
+            CMD->execute();
             exit(0);
         }
-        Command* CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
-        CMD->execute();
-        exit(0);
-    }
-    pid_t son2 = fork();
-    if(son2 == 0){
-        if(close(myPipe[0] == -1)){
-            perror("smash error: close failed");
-            exit(0);
-        }
-        if(dup2(myPipe[1],Stream) == -1){
-            perror("smash error: dup2 failed");
-            exit(0);
-        }
-        Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
-        CMD->execute();
-        exit(0);
-    }
-        if(close(myPipe[0] == -1)){
+        if (close(myPipe[0] == -1)) {
             perror("smash error: close failed");
             return;
         }
-        if(close(myPipe[1]) == -1) {
+        if (close(myPipe[1]) == -1) {
             perror("smash error: close failed");
             return;
         }
+        waitpid(Grandson, nullptr,WUNTRACED);
+        waitpid(Grandson2, nullptr,WUNTRACED);
+        exit(0);
+    }
+    waitpid(son, nullptr,WUNTRACED);
 }
 
 RedirectionCommand::RedirectionCommand(const char *cmd_line): Command(cmd_line,REDIRECTION) {
@@ -867,6 +888,7 @@ void SmallShell::executeCommand(const char *cmd_line) {
         }
 
         currCommand->execute();
+        currCommand = nullptr;
     }
 
 }
