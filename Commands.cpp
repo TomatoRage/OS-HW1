@@ -145,119 +145,63 @@ PipeCommand::PipeCommand(const char *cmd_line): Command(cmd_line,PIPE) { }
 
 void PipeCommand::execute() {
     int idx = cmdSyntax.find("|&");
+    string inp;
+    string outp;
+    int myPipe[2];
+    int Stream;
+
     if(idx == string::npos){
-        string inp = cmdSyntax.substr(cmdSyntax.find("|")+1);
-        string outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
-        int myPipe[2];
-        char* buff = new char[200];
-        int result;
+        inp = cmdSyntax.substr(cmdSyntax.find("|")+1);
+        outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
+        Stream = 1;
 
-        if(pipe(myPipe) == -1){
-
-            perror("smash error: pipe failed");
-            return;
-        }
-
-        pid_t son = fork();
-        if(son == -1) {
-            perror("smash error: fork failed");
-            return;
-        }
-        if(son == 0){
-            if(close(myPipe[1]) == -1){
-                perror("smash error: close failed");
-                return;
-            }
-            int HasBeenRead = 1;
-            while(HasBeenRead) {
-                HasBeenRead = read(myPipe[0], buff, 200);
-                if(HasBeenRead == -1){
-                    perror("smash error: read failed");
-                    return;
-                }
-                Command* CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
-                CMD->execute();
-                if(write(1,buff,200) == -1){
-                    perror("smash error: write failed");
-                    return;
-                }
-            }
-        }else{
-            if(close(myPipe[0] == -1)){
-                perror("smash error: close failed");
-                return;
-            }
-            int HasBeenRead = 1;
-            while(HasBeenRead) {
-                Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
-                CMD->execute();
-                HasBeenRead = read(1,buff,200);
-                if(HasBeenRead == -1) {
-                    perror("smash error: read failed");
-                    return;
-                }
-                if(write(myPipe[1],buff,200) == -1){
-                    perror("smash error: write failed");
-                    return;
-                }
-            }
-        }
     }else{
         string inp = cmdSyntax.substr(cmdSyntax.find("|")+2);
-        string outp = cmdSyntax.substr(0,cmdSyntax.find("|")-1);
-        int myPipe[2];
-        char buff[200];
+        string outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
+        Stream = 2;
+    }
 
-        if(pipe(myPipe) == -1){
+    if(pipe(myPipe) == -1){
+        perror("smash error: pipe failed");
+        return;
+    }
 
-            perror("smash error: pipe failed");
+    pid_t son = fork();
+    if(son == -1) {
+        perror("smash error: fork failed");
+        return;
+    }
+    if(son == 0){
+        if(close(myPipe[1]) == -1){
+            perror("smash error: close failed");
             return;
         }
-
-        pid_t son = fork();
-        if(son == -1) {
-            perror("smash error: fork failed");
+        if(dup2(myPipe[0],0) == -1){
+            perror("smash error: dup2 failed");
             return;
         }
-        if(son == 0){
-            if(close(myPipe[1]) == -1){
-                perror("smash error: close failed");
-                return;
-            }
-            int HasBeenRead = 1;
-            while(HasBeenRead) {
-                HasBeenRead = read(myPipe[0], buff, 200);
-                if(HasBeenRead == -1) {
-                    perror("smash error: read failed");
-                    return;
-                }
-                Command* CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
-                CMD->execute();
-                write(1,buff,200);
-                if(write(1,buff,200) == -1){
-                    perror("smash error: write failed");
-                    return;
-                }
-            }
-        }else{
-            if(close(myPipe[0] == -1)){
-                perror("smash error: close failed");
-                return;
-            }
-            int HasBeenRead = 1;
-            while(HasBeenRead) {
-                Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
-                CMD->execute();
-                HasBeenRead = read(2,buff,200);
-                if(HasBeenRead == -1) {
-                    perror("smash error: read failed");
-                    return;
-                }
-                if(write(myPipe[1],buff,200) == -1){
-                    perror("smash error: write failed");
-                    return;
-                }
-            }
+        Command* CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
+        CMD->execute();
+    }else{
+        if(close(myPipe[0] == -1)){
+            perror("smash error: close failed");
+            return;
+        }
+        int OLDFD = dup(Stream);
+        dup2(myPipe[1],Stream);
+        Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
+        CMD->execute();
+        if(close(myPipe[1]) == -1){
+            perror("smash error: close failed");
+            return;
+        }
+        if(dup2(OLDFD,Stream) == -1){
+            perror("smash error: dup2 failed");
+            return;
+        }
+        if(close(OLDFD) == -1){
+            perror("smash error: close failed");
+            return;
         }
     }
 }
@@ -535,9 +479,12 @@ void KillCommand::execute() {
         return;
     }
     try{
-        sig = stoi(Arguments[1]) * -1;
-        job = stoi(Arguments[2]) * - 1;
+        sig = stoi(Arguments[1]);
+        job = stoi(Arguments[2]);
     }catch(...){
+        cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }if(sig > 0){
         cerr << "smash error: kill: invalid arguments" << endl;
         return;
     }
@@ -545,6 +492,7 @@ void KillCommand::execute() {
         cerr << "smash error: kill: job-id " << job << " does not exist" << endl;
         return;
     }
+    sig *= -1;
     int result = kill(Jobs->getJobById(job)->cmd->processPID,sig);
 
     if (result == -1){
@@ -658,7 +606,8 @@ void HeadCommand::execute() {
             return;
         }
         buff = new char[1];
-        ssize_t text = read(file, (void*)buff, 1);
+        size_t size = 1;
+        ssize_t text = read(file, (void*)buff, size);
         if (text < 0) {
             perror("smash error: read failed");
             return;
@@ -668,7 +617,7 @@ void HeadCommand::execute() {
         while (NumOfRows>0){
 
             cout << buff;
-            text = read(file, (void*)buff, 1);
+            text = read(file, (void*)buff, size);
             if (text < 0) {
                 perror("smash error: read failed");
                 return;
@@ -702,7 +651,8 @@ void HeadCommand::execute() {
         }
 
         buff = new char[1];
-        ssize_t text = read(file, (void*)buff, 1);
+        size_t size = 1;
+        ssize_t text = read(file, (void*)buff, size);
 
         if (text < 0) {
             perror("smash error: read failed");
@@ -714,7 +664,7 @@ void HeadCommand::execute() {
         while (NumOfRows>0){
 
         cout << buff;
-        text = read(file, (void*)buff, 1);
+        text = read(file, (void*)buff, size);
         if (text < 0) {
             perror("smash error: read failed");
             return;
