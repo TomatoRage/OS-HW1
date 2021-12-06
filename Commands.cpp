@@ -174,36 +174,38 @@ void PipeCommand::execute() {
     if(son == 0){
         if(close(myPipe[1]) == -1){
             perror("smash error: close failed");
-            return;
+            exit(0);
         }
         if(dup2(myPipe[0],0) == -1){
             perror("smash error: dup2 failed");
-            return;
+            exit(0);
         }
         Command* CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
         CMD->execute();
-    }else{
+        exit(0);
+    }
+    pid_t son2 = fork();
+    if(son2 == 0){
+        if(close(myPipe[0] == -1)){
+            perror("smash error: close failed");
+            exit(0);
+        }
+        if(dup2(myPipe[1],Stream) == -1){
+            perror("smash error: dup2 failed");
+            exit(0);
+        }
+        Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
+        CMD->execute();
+        exit(0);
+    }
         if(close(myPipe[0] == -1)){
             perror("smash error: close failed");
             return;
         }
-        int OLDFD = dup(Stream);
-        dup2(myPipe[1],Stream);
-        Command* CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
-        CMD->execute();
-        if(close(myPipe[1]) == -1){
+        if(close(myPipe[1]) == -1) {
             perror("smash error: close failed");
             return;
         }
-        if(dup2(OLDFD,Stream) == -1){
-            perror("smash error: dup2 failed");
-            return;
-        }
-        if(close(OLDFD) == -1){
-            perror("smash error: close failed");
-            return;
-        }
-    }
 }
 
 RedirectionCommand::RedirectionCommand(const char *cmd_line): Command(cmd_line,REDIRECTION) {
