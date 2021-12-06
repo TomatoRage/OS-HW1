@@ -30,6 +30,7 @@ public:
 
     Command(const char* cmd_line,CommandType type);
     virtual ~Command();
+    Command(Command& C);
     virtual void execute() = 0;
     void FillInArguments(const string& cmdline);
     //virtual void prepare();

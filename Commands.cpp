@@ -91,6 +91,14 @@ Command::~Command() noexcept {
     //TODO:Delete Vector
 }
 
+Command::Command(Command &C) {
+    cmdSyntax = C.cmdSyntax;
+    Type = C.Type;
+    processPID = C.processPID;
+    Arguments = *(new vector<string>);
+    FillInArguments(cmdSyntax);
+}
+
 void Command::FillInArguments(const string& cmdline) {
     char** Args = new char*[20];
     int size = _parseCommandLine(cmdline.c_str(),Args);
@@ -565,7 +573,7 @@ void ForegroundCommand::execute() {
     }
     cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
-    memcpy((void*)SmallShell::getInstance().currCommand,(void*)Jobs->getJobById(jobid)->cmd,sizeof(*(Jobs->getJobById(jobid)->cmd)));
+    *(SmallShell::getInstance().currCommand) = *(Jobs->getJobById(jobid)->cmd);
     Jobs->removeJobById(jobid);
     waitpid(PID, nullptr,WUNTRACED);
 }
