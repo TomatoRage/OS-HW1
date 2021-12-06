@@ -144,7 +144,7 @@ void ExternalCommand::execute() {
 PipeCommand::PipeCommand(const char *cmd_line): Command(cmd_line,PIPE) { }
 
 void PipeCommand::execute() {
-    unsigned int idx = cmdSyntax.find("|&");
+    int idx = cmdSyntax.find("|&");
     string inp;
     string outp;
     int myPipe[2];
@@ -165,6 +165,7 @@ void PipeCommand::execute() {
         return;
     }
     if(son == 0) {
+        setpgrp();
         if (pipe(myPipe) == -1) {
             perror("smash error: pipe failed");
             return;
@@ -189,6 +190,7 @@ void PipeCommand::execute() {
                 exit(1);
             }
             Command *CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
+            CMD->processPID = getppid();
             CMD->execute();
             exit(0);
         }
@@ -211,6 +213,7 @@ void PipeCommand::execute() {
                 exit(1);
             }
             Command *CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
+            CMD->processPID = getppid();
             CMD->execute();
             exit(0);
         }
@@ -235,7 +238,7 @@ RedirectionCommand::RedirectionCommand(const char *cmd_line): Command(cmd_line,R
 }
 
 void RedirectionCommand::execute() {
-    unsigned int idx = cmdSyntax.find(">>");
+    int idx = cmdSyntax.find(">>");
     if(idx == string::npos){
         string File = cmdSyntax.substr(cmdSyntax.find(">")+1);
         string cmd = cmdSyntax.substr(0, cmdSyntax.find(">"));
@@ -398,7 +401,7 @@ void JobsList::printJobsList() {
         cout << "[" << Job->jobID << "] " << Job->cmd->cmdSyntax << " : " << Job->cmd->processPID << " "
         << (int) difftime(time(nullptr),Job->StartTime) << " secs";
         if(Job->state == JobEntry::STOPPED)
-            cout << " (Stopped)";
+            cout << " (stopped)";
         cout << endl;
     }
 }
