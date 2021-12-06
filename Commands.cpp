@@ -84,7 +84,7 @@ Command::Command(const char *cmd_line,CommandType type) {
     cmdSyntax = cmd;
     this->Type = type;
     FillInArguments(cmd);
-    this->processPID = -1;
+    this->processPID = getpid();
 }
 
 Command::~Command() noexcept {
@@ -159,6 +159,7 @@ void PipeCommand::execute() {
         string outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
         Stream = 2;
     }
+    pid_t PPid = processPID;
     pid_t son = fork();
     if(son == -1){
         perror("smash error: fork failed");
@@ -166,9 +167,10 @@ void PipeCommand::execute() {
     }
     if(son == 0) {
         setpgrp();
+        processPID = getppid();
         if (pipe(myPipe) == -1) {
             perror("smash error: pipe failed");
-            return;
+            exit(1);
         }
 
         pid_t Grandson = fork();
@@ -190,7 +192,7 @@ void PipeCommand::execute() {
                 exit(1);
             }
             Command *CMD = SmallShell::getInstance().CreateCommand(inp.c_str());
-            CMD->processPID = getppid();
+            CMD->processPID = PPid;
             CMD->execute();
             exit(0);
         }
@@ -213,7 +215,7 @@ void PipeCommand::execute() {
                 exit(1);
             }
             Command *CMD = SmallShell::getInstance().CreateCommand(outp.c_str());
-            CMD->processPID = getppid();
+            CMD->processPID = PPid;
             CMD->execute();
             exit(0);
         }
@@ -350,9 +352,7 @@ void GetCurrDirCommand::execute() {
 ShowPidCommand::ShowPidCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
 
 void ShowPidCommand::execute() {
-    pid_t currPid = getpid();
-
-    cout << "smash pid is " << currPid << endl;
+    cout << "smash pid is " << processPID << endl;
 }
 
 QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs) {}
