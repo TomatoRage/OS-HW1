@@ -565,6 +565,7 @@ void ForegroundCommand::execute() {
     }
     cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " :" << Jobs->getJobById(jobid)->cmd->processPID << endl;
     pid_t PID = Jobs->getJobById(jobid)->cmd->processPID;
+    memcpy((void*)SmallShell::getInstance().currCommand,(void*)Jobs->getJobById(jobid)->cmd,sizeof(*(Jobs->getJobById(jobid)->cmd)));
     Jobs->removeJobById(jobid);
     waitpid(PID, nullptr,WUNTRACED);
 }
