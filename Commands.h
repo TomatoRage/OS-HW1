@@ -125,6 +125,7 @@ public:
         time_t StartTime;
     };
     int Total;
+    int lastJobID;
     vector<JobEntry*> Jobs;
 public:
     JobsList();
