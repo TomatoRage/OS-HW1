@@ -648,7 +648,7 @@ void chpromptCommand::execute() {
     if(Arguments.size() == 1)
         strcpy(SmallShell::getInstance().smashName,"smash");
     else {
-        strcpy(SmallShell::getInstance().smashName,const_cast<char *>(Arguments[1].c_str()));
+        strcpy(SmallShell::getInstance().smashName,Arguments[1].c_str());
     }
 }
 
@@ -771,7 +771,7 @@ SmallShell::SmallShell() {
 
     currCommand = NULL;
     oldDirname.clear();
-    smashName = new char[6];
+    smashName = new char[COMMAND_ARGS_MAX_LENGTH+1];
     jobList = new JobsList;
     strcpy(smashName, "smash");
     smashPID = getpid();
@@ -779,7 +779,6 @@ SmallShell::SmallShell() {
 }
 
 SmallShell::~SmallShell() {
-    delete smashName;
     delete jobList;
 }
 
