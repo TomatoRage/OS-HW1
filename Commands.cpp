@@ -149,7 +149,7 @@ void ExternalCommand::execute() {
                 perror("smash error: exec failed");
                 exit(1);
             }
-            exit(0);
+           exit(0);
         }else
             processPID = son;
     }
@@ -169,8 +169,8 @@ void PipeCommand::execute() {
         outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
         Stream = 1;
     }else{
-        string inp = cmdSyntax.substr(cmdSyntax.find("|")+2);
-        string outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
+        inp = cmdSyntax.substr(cmdSyntax.find("|")+2);
+        outp = cmdSyntax.substr(0,cmdSyntax.find("|"));
         Stream = 2;
     }
     pid_t PPid = processPID;
