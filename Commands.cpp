@@ -480,8 +480,9 @@ JobsList::JobEntry *JobsList::getLastJob(int *lastJobId) {
 JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
     if(Jobs.empty())
         return nullptr;
-    for(int i = Jobs.size()-1; i > 0; i--){
+    for(int i = Jobs.size()-1; i >= 0; i--){
         if(Jobs[i]->state == JobEntry::STOPPED){
+            *jobId = Jobs[i]->jobID;
             return Jobs[i];
         }
     }
