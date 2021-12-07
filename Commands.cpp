@@ -411,13 +411,10 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
         return;
     }
 
-    if(getMaxJobId()->jobID > NewJob->jobID){
+    if(getMaxJobId() && getMaxJobId()->jobID > NewJob->jobID){
         for(int i = 0; i < Jobs.size(); i++){
             if(Jobs[i]->jobID > NewJob->jobID) {
-                if(!i)
-                    Jobs.insert(std::next(Jobs.begin(), i), NewJob);
-                else
-                    Jobs.insert(std::next(Jobs.begin(), i - 1), NewJob);
+                Jobs.insert(std::next(Jobs.begin(), i), NewJob);
                 break;
             }
         }
@@ -621,10 +618,10 @@ void BackgroundCommand::execute() {
     }catch(...){
         cerr << "smash error: bg: invalid arguments" << endl;
         return;
-    }if(jobid == -1 && Jobs->getLastStoppedJob(&jobid) == nullptr){
+    }if((Arguments.size() == 1 && jobid == -1) && Jobs->getLastStoppedJob(&jobid) == nullptr){
         cerr << "smash error: bg: there is no stopped jobs to resume" << endl;
         return;
-    }if(jobid != -1 && Jobs->getJobById(jobid) == nullptr){
+    }if((Arguments.size() == 2 || jobid != -1) && Jobs->getJobById(jobid) == nullptr){
         cerr << "smash error: bg: job-id " << jobid << " does not exist" << endl;
         return;
     }if(jobid != -1 && Jobs->getJobById(jobid)->state == JobsList::JobEntry::RUNNING) {
