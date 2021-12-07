@@ -410,7 +410,19 @@ void JobsList::addJob(Command *cmd, bool isStopped) {
         delete NewJob;
         return;
     }
-    Jobs.emplace_back(NewJob);
+
+    if(getMaxJobId()->jobID > NewJob->jobID){
+        for(int i = 0; i < Jobs.size(); i++){
+            if(Jobs[i]->jobID > NewJob->jobID) {
+                if(!i)
+                    Jobs.insert(std::next(Jobs.begin(), i), NewJob);
+                else
+                    Jobs.insert(std::next(Jobs.begin(), i - 1), NewJob);
+                break;
+            }
+        }
+    }else
+        Jobs.emplace_back(NewJob);
 
     Total++;
 
