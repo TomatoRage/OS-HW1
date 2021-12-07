@@ -616,7 +616,7 @@ void BackgroundCommand::execute() {
         return;
     }
     Jobs->getJobById(jobid)->state = JobsList::JobEntry::RUNNING;
-    cout << cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->processPID << endl;
+    cout << Jobs->getJobById(jobid)->cmd->cmdSyntax << " : " << Jobs->getJobById(jobid)->cmd->processPID << endl;
 }
 
 chpromptCommand::chpromptCommand(const char *cmd_line): BuiltInCommand(cmd_line) {}
@@ -920,4 +920,5 @@ void SmallShell::executeCommand(const char *cmd_line) {
         currCommand->execute();
     }
 
+    currCommand = nullptr;
 }
