@@ -115,7 +115,7 @@ ExternalCommand::ExternalCommand(const char *cmd_line): Command(cmd_line,FGEXTER
     if(_isBackgroundComamnd(cmd_line)){
         Type = BGEXTERNAL;
     }
-
+    cmdSyntax = cmd_line;
 }
 
 ExternalCommand::ExternalCommand(ExternalCommand &E): Command(E) {
@@ -131,7 +131,9 @@ void ExternalCommand::execute() {
     if(Type == FGEXTERNAL){
         if(son == 0){
             setpgrp();
-            char *Args[] = {"/bin/bash","-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
+            char* STR;
+            strcpy(STR,cmdSyntax.c_str());
+            char *Args[] = {"/bin/bash","-c", STR, NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
                 exit(1);
@@ -144,7 +146,9 @@ void ExternalCommand::execute() {
     }else{
         if(son == 0){
             setpgrp();
-            char *Args[] = {"/bin/bash","-c",const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str()), NULL};
+            char* STR;
+            strcpy(STR,cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str());
+            char *Args[] = {"/bin/bash","-c",STR, NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
                 exit(1);
