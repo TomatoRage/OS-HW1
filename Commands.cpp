@@ -134,8 +134,9 @@ void ExternalCommand::execute() {
             char *Args[] = {"/bin/bash","-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
-                return;
+                exit(1);
             }
+            exit(0);
         }else{
             processPID = son;
             waitpid(son, nullptr,WUNTRACED);
@@ -146,8 +147,9 @@ void ExternalCommand::execute() {
             char *Args[] = {"/bin/bash","-c",const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str()), NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
-                return;
+                exit(1);
             }
+            exit(0);
         }else
             processPID = son;
     }
@@ -190,7 +192,7 @@ void PipeCommand::execute() {
             perror("smash error: fork failed");
             exit(1);
         }
-        if (Grandson == 0) {
+        if (Grandson == 0) { // Reads
             if (close(myPipe[1]) == -1) {
                 perror("smash error: close failed");
                 exit(1);
@@ -209,7 +211,7 @@ void PipeCommand::execute() {
             exit(0);
         }
         pid_t Grandson2 = fork();
-        if (Grandson2 == -1) {
+        if (Grandson2 == -1) { // Writes
             perror("smash error: fork failed");
             exit(1);
         }
