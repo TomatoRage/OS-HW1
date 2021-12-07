@@ -131,7 +131,7 @@ void ExternalCommand::execute() {
     if(Type == FGEXTERNAL){
         if(son == 0){
             setpgrp();
-            char *Args[] = {"bin/bash","-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
+            char *Args[] = {"/bin/bash","-c", const_cast<char *>(cmdSyntax.c_str()), NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
                 return;
@@ -143,7 +143,7 @@ void ExternalCommand::execute() {
     }else{
         if(son == 0){
             setpgrp();
-            char *Args[] = {"bin/bash","-c",const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str()), NULL};
+            char *Args[] = {"/bin/bash","-c",const_cast<char *>(cmdSyntax.substr(0, cmdSyntax.size() - 1).c_str()), NULL};
             if(execv("/bin/bash",Args) == -1) {
                 perror("smash error: exec failed");
                 return;
@@ -654,7 +654,7 @@ void HeadCommand::execute() {
     int file;
     char * buff=NULL;
     if (Arguments.size() == 1) {
-        cerr << "smash error: head: invalid arguments" << endl;
+        cerr << "smash error: head: not enough arguments" << endl;
     } else if (Arguments.size() == 2) {
         if (Arguments[1][0] == '-') {
             try {
